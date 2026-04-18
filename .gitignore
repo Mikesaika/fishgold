@@ -1,0 +1,36 @@
+# --- NETBEANS ESPECÍFICO ---
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+.nb-gradle/
+
+# --- ARCHIVOS DE SISTEMA Y LOGS ---
+*.log
+*.swp
+.DS_Store
+Thumbs.db
+
+# --- JAVA Y COMPILACIÓN ---
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+
+# --- MAVEN (Si usas Maven en NetBeans) ---
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.nextDevelopmentVersion
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/
+# --- ARCHIVOS DE VARIABLE DE ENTORNO ---
+.env
