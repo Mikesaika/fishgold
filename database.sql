@@ -1,61 +1,90 @@
-
-CREATE DATABASE fishgold_db;
+CREATE DATABASE IF NOT EXISTS fishgold_db;
 USE fishgold_db;
 
 -- ==========================================================
--- MÓDULO 1: TRABAJADORES (CRUD completo)
+-- 1. USUARIOS (Para el Login del sistema)
 -- ==========================================================
-CREATE TABLE trabajadores (
+CREATE TABLE IF NOT EXISTS usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    cedula_dni VARCHAR(15) UNIQUE NOT NULL, -- Identificador único para búsquedas
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    nombre_usuario VARCHAR(100) DEFAULT NULL,
+    rol ENUM('Administrador', 'Capitan', 'Digitador') DEFAULT 'Digitador',
+    fecha_creacion TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ==========================================================
+-- 2. CONFIGURACIÓN (Cerebro financiero del precio del kilo)
+-- ==========================================================
+CREATE TABLE IF NOT EXISTS configuracion_pago (
+    id INT NOT NULL DEFAULT 1,
+    pago_kilo_base DOUBLE NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT unica_fila CHECK (id = 1) -- Garantiza que solo exista una configuración
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ==========================================================
+-- 3. TRABAJADORES
+-- ==========================================================
+CREATE TABLE IF NOT EXISTS trabajadores (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    cedula_dni VARCHAR(15) UNIQUE NOT NULL,
     nombre_completo VARCHAR(150) NOT NULL,
-    rol_cargo VARCHAR(50) NOT NULL,        -- Capitán, Motorista, Pescador, etc.
-    telefono VARCHAR(20),
-    direccion VARCHAR(255),
+    rol_cargo VARCHAR(50) NOT NULL,
+    telefono VARCHAR(20) DEFAULT NULL,
+    direccion VARCHAR(255) DEFAULT NULL,
     estado ENUM('Activo', 'Inactivo') DEFAULT 'Activo',
-    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+    fecha_registro TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ==========================================================
--- MÓDULO 2: PLANIFICACIÓN (CRUD completo)
+-- 4. PLANIFICACIONES (Evolucionada: Sin monto base estático)
 -- ==========================================================
-CREATE TABLE planificaciones (
+CREATE TABLE IF NOT EXISTS planificaciones (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    codigo_viaje VARCHAR(20) UNIQUE NOT NULL, -- Ej: VIAJE-2026-001
+    codigo_viaje VARCHAR(20) UNIQUE NOT NULL,
     embarcacion_nombre VARCHAR(100) NOT NULL,
-    destino_ruta VARCHAR(150),
+    destino_ruta VARCHAR(150) DEFAULT NULL,
     fecha_salida_programada DATE NOT NULL,
-    monto_base_tripulacion DECIMAL(12,2) NOT NULL, -- Pago total ofrecido
-    meta_peso_kg DECIMAL(10,2) NOT NULL,          -- Peso objetivo para el bono
+    meta_peso_kg DECIMAL(10,2) NOT NULL,
     estado ENUM('Pendiente', 'En Curso', 'Finalizado') DEFAULT 'Pendiente'
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ==========================================================
--- MÓDULO 3: FAENA (Solo Registro, Reporte y Búsqueda)
+-- 5. FAENA ASISTENCIA (Con índice único para evitar duplicados)
 -- ==========================================================
-CREATE TABLE faena_asistencia (
+CREATE TABLE IF NOT EXISTS faena_asistencia (
     id INT AUTO_INCREMENT PRIMARY KEY,
     planificacion_id INT NOT NULL,
     trabajador_id INT NOT NULL,
-    fecha_asistencia TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    -- Nota: No incluimos DELETE ni UPDATE en la lógica de la App para esta tabla
-    FOREIGN KEY (planificacion_id) REFERENCES planificaciones(id),
-    FOREIGN KEY (trabajador_id) REFERENCES trabajadores(id)
-);
+    fecha_asistencia TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (planificacion_id) REFERENCES planificaciones(id) ON DELETE CASCADE,
+    FOREIGN KEY (trabajador_id) REFERENCES trabajadores(id) ON DELETE CASCADE,
+    UNIQUE KEY idx_viaje_trabajador (planificacion_id, trabajador_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ==========================================================
--- MÓDULO 4: CAPTURA Y LIQUIDACIÓN (Registro de Peso y Pago)
+-- 6. LIQUIDACIÓN CAPTURA
 -- ==========================================================
-CREATE TABLE liquidacion_captura (
+CREATE TABLE IF NOT EXISTS liquidacion_captura (
     id INT AUTO_INCREMENT PRIMARY KEY,
     planificacion_id INT UNIQUE NOT NULL,
     peso_total_pescado DECIMAL(10,2) NOT NULL,
-    monto_final_calculado DECIMAL(12,2), -- Aquí se guarda el base o el base + 15%
-    registrado_por_capitan VARCHAR(150),
-    fecha_cierre TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    monto_final_calculado DECIMAL(12,2) DEFAULT NULL,
+    registrado_por_capitan VARCHAR(150) DEFAULT NULL,
+    fecha_cierre TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     observaciones TEXT,
-    FOREIGN KEY (planificacion_id) REFERENCES planificaciones(id)
-);
--- Insertar un usuario inicial para que puedas entrar
-INSERT INTO usuarios (username, password, nombre_usuario, rol) 
+    FOREIGN KEY (planificacion_id) REFERENCES planificaciones(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ==========================================================
+-- DATOS INICIALES (SEMILLAS)
+-- ==========================================================
+
+-- Usuario Admin por defecto
+INSERT IGNORE INTO usuarios (username, password, nombre_usuario, rol) 
 VALUES ('admin', 'admin123', 'Miguel Administrador', 'Administrador');
+
+-- Precio del kilo inicial ($5.00 como acordamos)
+INSERT IGNORE INTO configuracion_pago (id, pago_kilo_base) 
+VALUES (1, 5.0);
