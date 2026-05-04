@@ -1,18 +1,25 @@
 package com.mycompany.fishgold.views;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class LoginView extends JFrame {
     private JTextField txtUsername;
     private JPasswordField txtPassword;
     private JButton btnLogin;
-    private final Color COLOR_PRIMARIO = new Color(41, 128, 185); // Azul
-    private final Color COLOR_TEXTO = new Color(44, 62, 80);
+
+    // Labels para errores (Feedback en tiempo real)
+    private JLabel errUser, errPass;
+
+    // Paleta de colores SENAE/Moderno
+    private final Color COLOR_PRIMARIO = new Color(37, 99, 235);
+    private final Color COLOR_TEXTO = new Color(15, 23, 42);
+    private final Color COLOR_ERROR = new Color(220, 38, 38);
 
     public LoginView() {
         setTitle("Fishgold - Acceso al Sistema");
-        setSize(400, 250); // Un poco más amplio para el diseño moderno
+        setSize(450, 600); // Un poco más alto para los mensajes de error
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
         initComponents();
@@ -20,75 +27,116 @@ public class LoginView extends JFrame {
     }
 
     private void initComponents() {
-        JPanel mainPanel = new JPanel(new BorderLayout());
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.setBackground(Color.WHITE);
+        mainPanel.setBorder(new EmptyBorder(40, 50, 40, 50));
 
-        // --- Encabezado ---
-        JPanel headerPanel = new JPanel();
-        headerPanel.setBackground(COLOR_PRIMARIO);
-        headerPanel.setPreferredSize(new Dimension(0, 50));
-        JLabel lblHeader = new JLabel("INICIO DE SESIÓN");
-        lblHeader.setForeground(Color.WHITE);
-        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        headerPanel.add(lblHeader);
-        mainPanel.add(headerPanel, BorderLayout.NORTH);
+        // --- ICONO ---
+        JLabel lblIcon = new JLabel("🚢");
+        lblIcon.setFont(new Font("Segoe UI Symbol", Font.PLAIN, 70));
+        lblIcon.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblIcon.setForeground(COLOR_PRIMARIO);
 
-        // --- Formulario ---
-        JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setOpaque(false);
-        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+        // --- TITULOS ---
+        JLabel lblWelcome = new JLabel("¡Bienvenido!");
+        lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 32));
+        lblWelcome.setForeground(COLOR_TEXTO);
+        lblWelcome.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel lblSub = new JLabel("Ingresa tus credenciales");
+        lblSub.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblSub.setForeground(new Color(71, 85, 105));
+        lblSub.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // --- PANEL DE FORMULARIO (GRIDBAG PARA ESTABILIDAD) ---
+        JPanel fieldPanel = new JPanel(new GridBagLayout());
+        fieldPanel.setOpaque(false);
+        fieldPanel.setMaximumSize(new Dimension(350, 250));
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 5, 10, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        // Estilo de etiquetas
-        Font labelFont = new Font("Segoe UI", Font.BOLD, 13);
-
+        gbc.weightx = 1.0;
         gbc.gridx = 0;
+
+        // Usuario
+        JLabel lblUser = new JLabel("Nombre de usuario");
+        lblUser.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblUser.setForeground(new Color(71, 85, 105));
         gbc.gridy = 0;
-        JLabel lblUser = new JLabel("Usuario:");
-        lblUser.setFont(labelFont);
-        lblUser.setForeground(COLOR_TEXTO);
-        formPanel.add(lblUser, gbc);
+        gbc.insets = new Insets(0, 0, 5, 0);
+        fieldPanel.add(lblUser, gbc);
 
-        txtUsername = new JTextField(15);
-        txtUsername.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        gbc.gridx = 1;
-        gbc.gridy = 0;
-        formPanel.add(txtUsername, gbc);
-
-        gbc.gridx = 0;
+        txtUsername = new JTextField();
+        styleField(txtUsername);
         gbc.gridy = 1;
-        JLabel lblPass = new JLabel("Contraseña:");
-        lblPass.setFont(labelFont);
-        lblPass.setForeground(COLOR_TEXTO);
-        formPanel.add(lblPass, gbc);
+        gbc.insets = new Insets(0, 0, 2, 0);
+        fieldPanel.add(txtUsername, gbc);
 
-        txtPassword = new JPasswordField(15);
-        txtPassword.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        gbc.gridx = 1;
-        gbc.gridy = 1;
-        formPanel.add(txtPassword, gbc);
+        errUser = createErrorLabel();
+        gbc.gridy = 2;
+        gbc.insets = new Insets(0, 0, 10, 0);
+        fieldPanel.add(errUser, gbc);
 
-        // --- Botón ---
-        btnLogin = new JButton("Ingresar al Sistema");
-        btnLogin.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        // Contraseña
+        JLabel lblPass = new JLabel("Contraseña");
+        lblPass.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblPass.setForeground(new Color(71, 85, 105));
+        gbc.gridy = 3;
+        gbc.insets = new Insets(0, 0, 5, 0);
+        fieldPanel.add(lblPass, gbc);
+
+        txtPassword = new JPasswordField();
+        styleField(txtPassword);
+        gbc.gridy = 4;
+        gbc.insets = new Insets(0, 0, 2, 0);
+        fieldPanel.add(txtPassword, gbc);
+
+        errPass = createErrorLabel();
+        gbc.gridy = 5;
+        gbc.insets = new Insets(0, 0, 10, 0);
+        fieldPanel.add(errPass, gbc);
+
+        // --- BOTÓN INICIAR SESIÓN ---
+        btnLogin = new JButton("Iniciar Sesión");
+        btnLogin.setFont(new Font("Segoe UI", Font.BOLD, 16));
         btnLogin.setBackground(COLOR_PRIMARIO);
         btnLogin.setForeground(Color.WHITE);
-        btnLogin.setFocusPainted(false);
+        btnLogin.setOpaque(true);
+        btnLogin.setBorderPainted(false);
+        btnLogin.setMaximumSize(new Dimension(350, 50));
         btnLogin.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnLogin.setFocusPainted(false);
+        btnLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.gridwidth = 2;
-        gbc.insets = new Insets(20, 0, 0, 0);
-        formPanel.add(btnLogin, gbc);
+        // --- ENSAMBLAJE ---
+        mainPanel.add(lblIcon);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        mainPanel.add(lblWelcome);
+        mainPanel.add(lblSub);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 35)));
+        mainPanel.add(fieldPanel);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        mainPanel.add(btnLogin);
 
-        mainPanel.add(formPanel, BorderLayout.CENTER);
         add(mainPanel);
     }
 
-    // --- Getters y utilidades ---
+    private void styleField(JTextField field) {
+        field.setPreferredSize(new Dimension(300, 42));
+        field.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(203, 213, 225), 1),
+                BorderFactory.createEmptyBorder(5, 12, 5, 12)));
+    }
+
+    private JLabel createErrorLabel() {
+        JLabel l = new JLabel(" "); // Espacio en blanco para reservar sitio
+        l.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        l.setForeground(COLOR_ERROR);
+        return l;
+    }
+
+    // --- GETTERS Y MÉTODOS DE FEEDBACK ---
     public String getUsername() {
         return txtUsername.getText().trim();
     }
@@ -97,7 +145,6 @@ public class LoginView extends JFrame {
         return new String(txtPassword.getPassword());
     }
 
-    // Necesarios para el Controller (Enter listener)
     public JTextField getTxtUsername() {
         return txtUsername;
     }
@@ -110,7 +157,15 @@ public class LoginView extends JFrame {
         return btnLogin;
     }
 
+    public JLabel getErrUser() {
+        return errUser;
+    }
+
+    public JLabel getErrPass() {
+        return errPass;
+    }
+
     public void displayErrorMessage(String errorMessage) {
-        JOptionPane.showMessageDialog(this, errorMessage, "Acceso Denegado", JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(this, errorMessage, "Error de Acceso", JOptionPane.ERROR_MESSAGE);
     }
 }

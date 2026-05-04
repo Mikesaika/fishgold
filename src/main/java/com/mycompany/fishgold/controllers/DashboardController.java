@@ -3,20 +3,20 @@ package com.mycompany.fishgold.controllers;
 import com.mycompany.fishgold.models.*;
 import com.mycompany.fishgold.views.DashboardPanel;
 import javax.swing.SwingWorker;
+import java.util.concurrent.ExecutionException;
 
-//Controlador para el Dashboard.
 public class DashboardController {
     private final DashboardPanel view;
-    private final FaenaDAO faenaDAO;
     private final TrabajadorDAO trabajadorDAO;
-    private final EmbarcacionDAO embarcacionDAO;
+    private final PlanificacionDAO planificacionDAO;
+    private final LiquidacionCapturaDAO liquidacionDAO;
 
-    public DashboardController(DashboardPanel view, FaenaDAO faenaDAO, TrabajadorDAO trabajadorDAO,
-            EmbarcacionDAO embarcacionDAO) {
+    public DashboardController(DashboardPanel view, TrabajadorDAO trabajadorDAO,
+            PlanificacionDAO planificacionDAO, LiquidacionCapturaDAO liquidacionDAO) {
         this.view = view;
-        this.faenaDAO = faenaDAO;
         this.trabajadorDAO = trabajadorDAO;
-        this.embarcacionDAO = embarcacionDAO;
+        this.planificacionDAO = planificacionDAO;
+        this.liquidacionDAO = liquidacionDAO;
         init();
     }
 
@@ -25,30 +25,57 @@ public class DashboardController {
         view.getBtnActualizar().addActionListener(e -> actualizarDatos());
     }
 
-    // Usa SwingWorker para que la UI no se congele si la base de datos tarda.
-
     public void actualizarDatos() {
-        new SwingWorker<int[], Void>() {
-            @Override
-            protected int[] doInBackground() {
-                // Obtenemos los conteos directamente desde el DAO (con SQL COUNT)
-                int pendientes = faenaDAO.countByEstado("Pendiente");
-                int activos = trabajadorDAO.countByEstado("Activo");
-                int embarcaciones = embarcacionDAO.countByEstado("Activa");
-                return new int[] { pendientes, activos, embarcaciones };
-            }
+        setLabelsText("...");
+        view.getBtnActualizar().setEnabled(false);
+        new DashboardWorker().execute();
+    }
 
-            @Override
-            protected void done() {
-                try {
-                    int[] resultados = get();
-                    view.getLblFaenasPendientes().setText(String.valueOf(resultados[0]));
-                    view.getLblTotalTrabajadores().setText(String.valueOf(resultados[1]));
-                    view.getLblTotalEmbarcaciones().setText(String.valueOf(resultados[2]));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+    // Usamos Object[] para poder mezclar Integers y Strings (para el dinero
+    // formateado)
+    private class DashboardWorker extends SwingWorker<Object[], Void> {
+        @Override
+        protected Object[] doInBackground() throws Exception {
+            // 1. Personal Activo
+            int activos = trabajadorDAO.countByEstado("Activo");
+
+            // 2. Operatividad: Viajes que están ocupando recursos
+            int operativos = planificacionDAO.countByEstado("Pendiente") +
+                    planificacionDAO.countByEstado("En Curso");
+
+            // 3. LÓGICA DE EXPERTO: Total de dinero producido por las capturas
+            // Sumamos todos los montos finales calculados automáticamente
+            double ingresoTotal = liquidacionDAO.readAll().stream()
+                    .mapToDouble(LiquidacionCaptura::getMontoFinalCalculado)
+                    .sum();
+
+            return new Object[] { activos, operativos, ingresoTotal };
+        }
+
+        @Override
+        protected void done() {
+            try {
+                Object[] datos = get();
+
+                // Actualización de la UI con los datos reales
+                view.getLblTotalTrabajadores().setText(String.valueOf(datos[0]));
+                view.getLblViajesPendientes().setText(String.valueOf(datos[1]));
+
+                // Formateo de moneda para la tarjeta de ingresos
+                double total = (double) datos[2];
+                view.getLblTotalCapturas().setText("$" + String.format("%.0f", total));
+
+            } catch (InterruptedException | ExecutionException e) {
+                setLabelsText("Error");
+            } finally {
+                view.getBtnActualizar().setEnabled(true);
             }
-        }.execute();
+        }
+    }
+
+    private void setLabelsText(String text) {
+        view.getLblTotalTrabajadores().setText(text);
+        view.getLblViajesPendientes().setText(text);
+        view.getLblTotalCapturas().setText(text);
     }
 }

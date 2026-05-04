@@ -2,191 +2,213 @@ package com.mycompany.fishgold.views;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class TrabajadorPanel extends JPanel {
-    private JTextField txtNombre, txtDireccion, txtEmergNombre, txtEmergRelacion, txtEmergTelefono, txtOtroPuesto;
-    private JRadioButton rbLicenciaSi, rbLicenciaNo;
-    private JComboBox<String> cbPuestos, cbEstado;
-    private JButton btnGuardar, btnLimpiar, btnEditar, btnEliminar;
     private JTable table;
     private DefaultTableModel tableModel;
+    private JTextField txtCedula, txtNombre, txtTelefono, txtDireccion, txtSearch;
+    private JComboBox<String> cbRol, cbEstado;
+    private JButton btnAdd, btnUpdate, btnDelete, btnClear, btnReporte;
+
+    // Etiquetas de Error para validación en tiempo real
+    private JLabel errCedula, errNombre, errTelefono;
+
+    // Paleta de Colores Slate & Blue (Profesional)
+    private final Color COLOR_FONDO = new Color(248, 250, 252);
+    private final Color COLOR_ACCENTO = new Color(37, 99, 235);
+    private final Color COLOR_EXITO = new Color(22, 163, 74);
+    private final Color COLOR_PELIGRO = new Color(220, 38, 38);
+    private final Color COLOR_SECUNDARIO = new Color(71, 85, 105);
 
     public TrabajadorPanel() {
-        setLayout(new BorderLayout(10, 10));
-        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        initComponents();
+        setLayout(new BorderLayout(30, 0));
+        setBackground(COLOR_FONDO);
+        setBorder(new EmptyBorder(40, 40, 40, 40));
+
+        initTopPanel();
+        initTablePanel();
+        initFormSidebar();
     }
 
-    private void initComponents() {
-        JPanel formContainer = new JPanel(new GridBagLayout());
-        formContainer.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder(" Ficha del Trabajador "),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+    private void initTopPanel() {
+        JPanel topPanel = new JPanel(new BorderLayout(0, 20));
+        topPanel.setOpaque(false);
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(6, 6, 6, 6);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        JLabel lblTitle = new JLabel("Gestión de Personal");
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 32));
+        lblTitle.setForeground(new Color(15, 23, 42));
+        topPanel.add(lblTitle, BorderLayout.NORTH);
 
-        // Fila 0: Datos Personales
-        addLabel(formContainer, "Nombre Completo:", 0, 0, gbc);
-        txtNombre = new JTextField(18);
-        formContainer.add(txtNombre, getGBC(1, 0, gbc));
+        JPanel actionRow = new JPanel(new BorderLayout());
+        actionRow.setOpaque(false);
 
-        addLabel(formContainer, "¿Licencia de Navegación?:", 2, 0, gbc);
-        JPanel pnlRadio = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-        rbLicenciaSi = new JRadioButton("Sí");
-        rbLicenciaNo = new JRadioButton("No", true);
-        ButtonGroup bg = new ButtonGroup();
-        bg.add(rbLicenciaSi);
-        bg.add(rbLicenciaNo);
-        pnlRadio.add(rbLicenciaSi);
-        pnlRadio.add(rbLicenciaNo);
-        formContainer.add(pnlRadio, getGBC(3, 0, gbc));
+        // Buscador en tiempo real
+        txtSearch = new JTextField(25);
+        txtSearch.setPreferredSize(new Dimension(350, 40));
+        txtSearch.putClientProperty("JTextField.placeholderText", "Escriba nombre, cédula o cargo para filtrar...");
 
-        // Fila 1: Ubicación y Estado
-        addLabel(formContainer, "Dirección Domiciliaria:", 0, 1, gbc);
-        txtDireccion = new JTextField(18);
-        formContainer.add(txtDireccion, getGBC(1, 1, gbc));
+        btnReporte = createStyledButton("📄 Exportar Lista PDF", new Color(51, 65, 85));
 
-        addLabel(formContainer, "Estado Laboral:", 2, 1, gbc);
-        cbEstado = new JComboBox<>(new String[] { "Activo", "Inactivo" });
-        formContainer.add(cbEstado, getGBC(3, 1, gbc));
+        actionRow.add(txtSearch, BorderLayout.WEST);
+        actionRow.add(btnReporte, BorderLayout.EAST);
 
-        // Fila 2: SECCIÓN EMERGENCIA (Visualmente agrupada)
-        addLabel(formContainer, "Contacto Emergencia:", 0, 2, gbc);
-        txtEmergNombre = new JTextField(18);
-        txtEmergNombre.setToolTipText("Nombre del contacto");
-        formContainer.add(txtEmergNombre, getGBC(1, 2, gbc));
+        topPanel.add(actionRow, BorderLayout.SOUTH);
+        add(topPanel, BorderLayout.NORTH);
+    }
 
-        addLabel(formContainer, "Relación/Parentesco:", 2, 2, gbc);
-        txtEmergRelacion = new JTextField(12);
-        formContainer.add(txtEmergRelacion, getGBC(3, 2, gbc));
-
-        // Fila 3: Teléfono y Cargos
-        addLabel(formContainer, "Teléfono Emergencia:", 0, 3, gbc);
-        txtEmergTelefono = new JTextField(18);
-        formContainer.add(txtEmergTelefono, getGBC(1, 3, gbc));
-
-        addLabel(formContainer, "Cargo de Experiencia:", 2, 3, gbc);
-        cbPuestos = new JComboBox<>(new String[] { "Ninguno", "Capitán", "Oficial", "Cocinero", "Otro" });
-        formContainer.add(cbPuestos, getGBC(3, 3, gbc));
-
-        // Fila 4: Campo condicional
-        addLabel(formContainer, "Especifique Puesto:", 2, 4, gbc);
-        txtOtroPuesto = new JTextField(12);
-        txtOtroPuesto.setEnabled(false);
-        formContainer.add(txtOtroPuesto, getGBC(3, 4, gbc));
-
-        // Botones Formulario
-        JPanel btnPnl = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
-        btnGuardar = new JButton("Registrar Trabajador");
-        btnLimpiar = new JButton("Limpiar Campos");
-        btnPnl.add(btnGuardar);
-        btnPnl.add(btnLimpiar);
-
-        gbc.gridx = 0;
-        gbc.gridy = 5;
-        gbc.gridwidth = 4;
-        formContainer.add(btnPnl, gbc);
-
-        add(formContainer, BorderLayout.NORTH);
-
-        // --- TABLA (CENTRO) ---
-        JPanel tableContainer = new JPanel(new BorderLayout(0, 10));
-        tableContainer.setBorder(BorderFactory.createTitledBorder(" Nómina de Personal "));
-
-        String[] cols = { "ID", "Nombre", "Licencia", "Dirección", "Contacto", "Teléfono", "Cargo", "Estado" };
-        tableModel = new DefaultTableModel(cols, 0) {
+    private void initTablePanel() {
+        String[] columns = { "ID", "Cédula", "Nombre", "Rol", "Teléfono", "Dirección", "Estado", "Registro" };
+        tableModel = new DefaultTableModel(columns, 0) {
             @Override
-            public boolean isCellEditable(int r, int c) {
+            public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
+
         table = new JTable(tableModel);
-        table.setRowHeight(25);
-        tableContainer.add(new JScrollPane(table), BorderLayout.CENTER);
+        styleTable(table);
 
-        JPanel tableActions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        btnEditar = new JButton("Cargar Selección");
-        btnEliminar = new JButton("Dar de Baja");
-        btnEliminar.setForeground(new Color(180, 0, 0));
-        tableActions.add(btnEditar);
-        tableActions.add(btnEliminar);
-        tableContainer.add(tableActions, BorderLayout.SOUTH);
+        // CORRECCIÓN: OCULTAR COLUMNA ID
+        table.getColumnModel().getColumn(0).setMinWidth(0);
+        table.getColumnModel().getColumn(0).setMaxWidth(0);
+        table.getColumnModel().getColumn(0).setPreferredWidth(0);
 
-        add(tableContainer, BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(226, 232, 240)));
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        add(scrollPane, BorderLayout.CENTER);
     }
 
-    // Auxiliares
-    private void addLabel(JPanel p, String text, int x, int y, GridBagConstraints c) {
-        c.gridx = x;
-        c.gridy = y;
-        c.gridwidth = 1;
-        JLabel lbl = new JLabel(text);
-        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        p.add(lbl, c);
+    private void initFormSidebar() {
+        JPanel sidebar = new JPanel(new GridBagLayout());
+        sidebar.setPreferredSize(new Dimension(380, 0));
+        sidebar.setBackground(Color.WHITE);
+        sidebar.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(226, 232, 240)),
+                new EmptyBorder(30, 30, 30, 30)));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        gbc.gridx = 0;
+
+        JLabel lblFormTitle = new JLabel("DATOS DEL TRABAJADOR");
+        lblFormTitle.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblFormTitle.setForeground(COLOR_ACCENTO);
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 20, 0);
+        sidebar.add(lblFormTitle, gbc);
+
+        // Inputs
+        txtCedula = new JTextField();
+        txtNombre = new JTextField();
+        txtTelefono = new JTextField();
+        txtDireccion = new JTextField();
+        cbRol = new JComboBox<>(new String[] { "Capitán", "Motorista", "Pescador", "Cocinero", "Ayudante" });
+        cbRol.setBackground(Color.WHITE);
+        cbEstado = new JComboBox<>(new String[] { "Activo", "Inactivo" });
+        cbEstado.setBackground(Color.WHITE);
+
+        // Añadir campos con labels y errores
+        addLabeledField("CÉDULA / DNI", txtCedula, sidebar, gbc, 1);
+        errCedula = createErrorLabel();
+        addErrorLabel(errCedula, sidebar, gbc, 3);
+
+        addLabeledField("NOMBRE COMPLETO", txtNombre, sidebar, gbc, 4);
+        errNombre = createErrorLabel();
+        addErrorLabel(errNombre, sidebar, gbc, 6);
+
+        addLabeledField("CARGO OPERATIVO", cbRol, sidebar, gbc, 7);
+        gbc.gridy = 9;
+        sidebar.add(Box.createVerticalStrut(15), gbc); // Espaciador
+
+        addLabeledField("TELÉFONO DE CONTACTO", txtTelefono, sidebar, gbc, 10);
+        errTelefono = createErrorLabel();
+        addErrorLabel(errTelefono, sidebar, gbc, 12);
+
+        addLabeledField("DIRECCIÓN DE DOMICILIO", txtDireccion, sidebar, gbc, 13);
+        gbc.gridy = 15;
+        sidebar.add(Box.createVerticalStrut(15), gbc);
+
+        addLabeledField("ESTADO EN SISTEMA", cbEstado, sidebar, gbc, 16);
+
+        // Botonera
+        JPanel actions = new JPanel(new GridLayout(2, 2, 12, 12));
+        actions.setOpaque(false);
+        btnAdd = createStyledButton("✓ Guardar", COLOR_ACCENTO);
+        btnUpdate = createStyledButton("✎ Editar", COLOR_EXITO);
+        btnDelete = createStyledButton("🗑 Borrar", COLOR_PELIGRO);
+        btnClear = createStyledButton("⎙ Limpiar", COLOR_SECUNDARIO);
+
+        actions.add(btnAdd);
+        actions.add(btnUpdate);
+        actions.add(btnDelete);
+        actions.add(btnClear);
+
+        gbc.gridy = 18;
+        gbc.insets = new Insets(20, 0, 0, 0);
+        sidebar.add(actions, gbc);
+
+        gbc.gridy = 19;
+        gbc.weighty = 1.0;
+        sidebar.add(Box.createVerticalGlue(), gbc);
+
+        add(sidebar, BorderLayout.EAST);
     }
 
-    private GridBagConstraints getGBC(int x, int y, GridBagConstraints c) {
-        c.gridx = x;
-        c.gridy = y;
-        c.gridwidth = 1;
-        return c;
+    private void addLabeledField(String labelText, JComponent field, JPanel panel, GridBagConstraints gbc, int y) {
+        JLabel label = new JLabel(labelText);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        label.setForeground(new Color(100, 116, 139));
+        gbc.gridy = y;
+        gbc.insets = new Insets(8, 0, 4, 0);
+        panel.add(label, gbc);
+
+        field.setPreferredSize(new Dimension(0, 38));
+        gbc.gridy = y + 1;
+        gbc.insets = new Insets(0, 0, 2, 0);
+        panel.add(field, gbc);
     }
 
-    // Getters / Setters especializados
-    public boolean isLicencia() {
-        return rbLicenciaSi.isSelected();
+    private JLabel createErrorLabel() {
+        JLabel l = new JLabel(" ");
+        l.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        l.setForeground(COLOR_PELIGRO);
+        return l;
     }
 
-    public void setLicencia(boolean has) {
-        if (has)
-            rbLicenciaSi.setSelected(true);
-        else
-            rbLicenciaNo.setSelected(true);
+    private void addErrorLabel(JLabel l, JPanel panel, GridBagConstraints gbc, int y) {
+        gbc.gridy = y;
+        gbc.insets = new Insets(0, 0, 12, 0);
+        panel.add(l, gbc);
     }
 
-    public JTextField getTxtNombre() {
-        return txtNombre;
+    private JButton createStyledButton(String text, Color bg) {
+        JButton btn = new JButton(text);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btn.setBackground(bg);
+        btn.setForeground(Color.WHITE);
+        btn.setOpaque(true);
+        btn.setBorderPainted(false);
+        btn.setFocusPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return btn;
     }
 
-    public JTextField getTxtDireccion() {
-        return txtDireccion;
+    private void styleTable(JTable table) {
+        table.setRowHeight(50);
+        table.setSelectionBackground(new Color(239, 246, 255));
+        table.setSelectionForeground(COLOR_ACCENTO);
+        table.setShowVerticalLines(false);
+        table.setGridColor(new Color(241, 245, 249));
+        table.getTableHeader().setBackground(Color.WHITE);
+        table.getTableHeader().setPreferredSize(new Dimension(0, 50));
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
     }
 
-    public JTextField getTxtEmergNombre() {
-        return txtEmergNombre;
-    }
-
-    public JTextField getTxtEmergRelacion() {
-        return txtEmergRelacion;
-    }
-
-    public JTextField getTxtEmergTelefono() {
-        return txtEmergTelefono;
-    }
-
-    public JComboBox<String> getCbPuestos() {
-        return cbPuestos;
-    }
-
-    public JTextField getTxtOtroPuesto() {
-        return txtOtroPuesto;
-    }
-
-    public JComboBox<String> getCbEstado() {
-        return cbEstado;
-    }
-
-    public JButton getBtnGuardar() {
-        return btnGuardar;
-    }
-
-    public JButton getBtnLimpiar() {
-        return btnLimpiar;
-    }
-
+    // Getters actualizados
     public JTable getTable() {
         return table;
     }
@@ -195,11 +217,64 @@ public class TrabajadorPanel extends JPanel {
         return tableModel;
     }
 
-    public JButton getBtnEditar() {
-        return btnEditar;
+    public JTextField getTxtCedula() {
+        return txtCedula;
     }
 
-    public JButton getBtnEliminar() {
-        return btnEliminar;
+    public JTextField getTxtNombre() {
+        return txtNombre;
+    }
+
+    public JComboBox<String> getCbRol() {
+        return cbRol;
+    }
+
+    public JTextField getTxtTelefono() {
+        return txtTelefono;
+    }
+
+    public JTextField getTxtDireccion() {
+        return txtDireccion;
+    }
+
+    public JComboBox<String> getCbEstado() {
+        return cbEstado;
+    }
+
+    public JTextField getTxtSearch() {
+        return txtSearch;
+    }
+
+    public JButton getBtnAdd() {
+        return btnAdd;
+    }
+
+    public JButton getBtnUpdate() {
+        return btnUpdate;
+    }
+
+    public JButton getBtnDelete() {
+        return btnDelete;
+    }
+
+    public JButton getBtnClear() {
+        return btnClear;
+    }
+
+    public JButton getBtnReporte() {
+        return btnReporte;
+    }
+
+    // Getters para etiquetas de error
+    public JLabel getErrCedula() {
+        return errCedula;
+    }
+
+    public JLabel getErrNombre() {
+        return errNombre;
+    }
+
+    public JLabel getErrTelefono() {
+        return errTelefono;
     }
 }

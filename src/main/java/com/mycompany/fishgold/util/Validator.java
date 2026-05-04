@@ -1,63 +1,81 @@
 package com.mycompany.fishgold.util;
 
 import java.util.regex.Pattern;
+import javax.swing.JTextField;
+import javax.swing.BorderFactory;
+import java.awt.Color;
+import javax.swing.border.Border;
 
 public class Validator {
     private static final Pattern SOLO_LETRAS = Pattern.compile("^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]*$");
     private static final Pattern SOLO_NUMEROS = Pattern.compile("^\\d*$");
     private static final Pattern TELEFONO_FORMATO = Pattern.compile("^\\+?[0-9\\s\\-]{7,15}$");
-    private static final Pattern MATRICULA_FORMATO = Pattern.compile("^[A-Z0-9-]{3,20}$");
+
+    // Bordes estandarizados para el diseño moderno de FishGold
+    private static final Border BORDER_ERROR = BorderFactory.createLineBorder(new Color(239, 68, 68), 2); // Rojo
+                                                                                                          // vibrante
+    private static final Border BORDER_NORMAL = BorderFactory.createLineBorder(new Color(203, 213, 225), 1); // Gris
+                                                                                                             // Slate
 
     /**
-     * Verifica que el texto no esté vacío o compuesto solo por espacios.
+     * Valida que un campo no esté vacío y aplica feedback visual.
      */
-    public static boolean isNotBlank(String text) {
-        return text != null && !text.trim().isEmpty();
+    public static boolean isNotBlank(JTextField field) {
+        String text = field.getText();
+        boolean isValid = text != null && !text.trim().isEmpty();
+        applyStyle(field, isValid);
+        return isValid;
     }
 
     /**
-     * Valida si el texto contiene solo letras y espacios (Ideal para nombres).
+     * Valida si el texto contiene solo letras y aplica estilo.
      */
-    public static boolean isAlpha(String text) {
-        return text != null && SOLO_LETRAS.matcher(text).matches();
+    public static boolean isAlpha(JTextField field) {
+        String text = field.getText();
+        boolean isValid = text != null && SOLO_LETRAS.matcher(text).matches() && !text.trim().isEmpty();
+        applyStyle(field, isValid);
+        return isValid;
     }
 
     /**
-     * Valida si el texto es estrictamente numérico (sin decimales).
+     * Valida si el texto es decimal positivo (Meta y Monto) con feedback.
      */
-    public static boolean isNumeric(String text) {
-        return text != null && SOLO_NUMEROS.matcher(text).matches();
-    }
-
-    /**
-     * Valida si un string puede ser un número decimal válido.
-     */
-    public static boolean isDecimal(String text) {
-        if (text == null)
-            return false;
+    public static boolean isDecimal(JTextField field) {
+        String text = field.getText();
+        boolean isValid = false;
         try {
-            Double.parseDouble(text);
-            return true;
+            double val = Double.parseDouble(text);
+            isValid = val >= 0;
         } catch (NumberFormatException e) {
-            return false;
+            isValid = false;
+        }
+        applyStyle(field, isValid);
+        return isValid;
+    }
+
+    /**
+     * Valida formato de teléfono.
+     */
+    public static boolean isValidPhone(JTextField field) {
+        String text = field.getText();
+        boolean isValid = text != null && TELEFONO_FORMATO.matcher(text).matches();
+        applyStyle(field, isValid);
+        return isValid;
+    }
+
+    /**
+     * Método privado para aplicar el diseño UI dependiendo del resultado.
+     */
+    private static void applyStyle(JTextField field, boolean isValid) {
+        if (isValid) {
+            field.setBorder(BORDER_NORMAL);
+        } else {
+            field.setBorder(BORDER_ERROR);
         }
     }
 
-    /**
-     * Valida formato de teléfono internacional o local.
-     */
-    public static boolean isValidPhone(String phone) {
-        return phone != null && TELEFONO_FORMATO.matcher(phone).matches();
-    }
-
-    /**
-     * Valida que el año de compra sea coherente (ej: entre 1900 y 2100).
-     */
-    public static boolean isValidYear(String yearStr) {
-        if (!isNumeric(yearStr))
-            return false;
-        int year = Integer.parseInt(yearStr);
-        int currentYear = java.time.Year.now().getValue();
-        return year >= 1900 && year <= currentYear;
+    // Mantenemos tus métodos originales por si necesitas validar Strings puros
+    public static boolean isNotBlank(String text) {
+        return text != null && !text.trim().isEmpty();
     }
 }

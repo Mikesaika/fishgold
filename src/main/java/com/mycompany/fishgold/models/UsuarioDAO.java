@@ -8,6 +8,13 @@ import java.sql.SQLException;
 
 public class UsuarioDAO {
 
+    /**
+     * Valida el acceso al sistema.
+     * 
+     * @param username Nombre de usuario ingresado en el login.
+     * @param password Contraseña ingresada.
+     * @return Objeto Usuario si las credenciales coinciden, null en caso contrario.
+     */
     public Usuario login(String username, String password) {
         String query = "SELECT * FROM usuarios WHERE username = ? AND password = ?";
 
@@ -23,7 +30,8 @@ public class UsuarioDAO {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error crítico en UsuarioDAO (login): " + e.getMessage());
+            // Log de error más descriptivo para depuración
+            System.err.println("Error de conexión a la base de datos (FishGold): " + e.getMessage());
         }
         return null;
     }
@@ -32,6 +40,7 @@ public class UsuarioDAO {
         Usuario user = new Usuario();
         user.setId(rs.getInt("id"));
         user.setUsername(rs.getString("username"));
+        // Mapeamos la contraseña por si necesitas validaciones extras en el Controller
         user.setPassword(rs.getString("password"));
         return user;
     }

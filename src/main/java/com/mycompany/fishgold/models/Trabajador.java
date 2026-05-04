@@ -1,30 +1,47 @@
 package com.mycompany.fishgold.models;
 
-import java.util.Objects;
-
-// Modelo que representa al personal de Fishgold.
+import java.sql.Timestamp;
 
 public class Trabajador {
     private int id;
+    private String cedulaDni;
     private String nombreCompleto;
-    private boolean tieneLicencia;
+    private String rolCargo;
+    private String telefono;
     private String direccion;
-    private String contactoEmergenciaNombre;
-    private String contactoEmergenciaRelacion;
-    private String contactoEmergenciaTelefono;
-    private String puestosAnteriores;
     private String estado;
+    private Timestamp fechaRegistro;
 
     public Trabajador() {
     }
 
-    // Getters y Setters
+    public Trabajador(int id, String cedulaDni, String nombreCompleto, String rolCargo, String telefono,
+            String direccion, String estado, Timestamp fechaRegistro) {
+        this.id = id;
+        this.cedulaDni = cedulaDni;
+        this.nombreCompleto = nombreCompleto;
+        this.rolCargo = rolCargo;
+        this.telefono = telefono;
+        this.direccion = direccion;
+        this.estado = estado;
+        this.fechaRegistro = fechaRegistro;
+    }
+
+    // Getters y Setters impecables
     public int getId() {
         return id;
     }
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getCedulaDni() {
+        return cedulaDni;
+    }
+
+    public void setCedulaDni(String cedulaDni) {
+        this.cedulaDni = cedulaDni;
     }
 
     public String getNombreCompleto() {
@@ -35,12 +52,20 @@ public class Trabajador {
         this.nombreCompleto = nombreCompleto;
     }
 
-    public boolean isTieneLicencia() {
-        return tieneLicencia;
+    public String getRolCargo() {
+        return rolCargo;
     }
 
-    public void setTieneLicencia(boolean tieneLicencia) {
-        this.tieneLicencia = tieneLicencia;
+    public void setRolCargo(String rolCargo) {
+        this.rolCargo = rolCargo;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
     }
 
     public String getDireccion() {
@@ -51,38 +76,6 @@ public class Trabajador {
         this.direccion = direccion;
     }
 
-    public String getContactoEmergenciaNombre() {
-        return contactoEmergenciaNombre;
-    }
-
-    public void setContactoEmergenciaNombre(String contactoEmergenciaNombre) {
-        this.contactoEmergenciaNombre = contactoEmergenciaNombre;
-    }
-
-    public String getContactoEmergenciaRelacion() {
-        return contactoEmergenciaRelacion;
-    }
-
-    public void setContactoEmergenciaRelacion(String contactoEmergenciaRelacion) {
-        this.contactoEmergenciaRelacion = contactoEmergenciaRelacion;
-    }
-
-    public String getContactoEmergenciaTelefono() {
-        return contactoEmergenciaTelefono;
-    }
-
-    public void setContactoEmergenciaTelefono(String contactoEmergenciaTelefono) {
-        this.contactoEmergenciaTelefono = contactoEmergenciaTelefono;
-    }
-
-    public String getPuestosAnteriores() {
-        return puestosAnteriores;
-    }
-
-    public void setPuestosAnteriores(String puestosAnteriores) {
-        this.puestosAnteriores = puestosAnteriores;
-    }
-
     public String getEstado() {
         return estado;
     }
@@ -91,28 +84,17 @@ public class Trabajador {
         this.estado = estado;
     }
 
-    /**
-     * Compara trabajadores por ID.
-     * Evita que el sistema confunda dos objetos con el mismo nombre pero distinto
-     * ID.
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-        Trabajador that = (Trabajador) o;
-        return id == that.id;
+    public Timestamp getFechaRegistro() {
+        return fechaRegistro;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
+    public void setFechaRegistro(Timestamp fechaRegistro) {
+        this.fechaRegistro = fechaRegistro;
     }
 
     @Override
     public String toString() {
-        return nombreCompleto + (tieneLicencia ? " (Con Licencia)" : "");
+        // Formato ideal para ComboBoxes y Selección de Faena
+        return nombreCompleto + " (" + rolCargo + ")";
     }
 }

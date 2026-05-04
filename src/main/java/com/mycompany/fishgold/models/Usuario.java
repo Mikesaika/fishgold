@@ -16,7 +16,7 @@ public class Usuario {
         this.password = password;
     }
 
-    // Getters y Setters
+    // Getters y Setters impecables
     public int getId() {
         return id;
     }
@@ -58,6 +58,7 @@ public class Usuario {
 
     @Override
     public String toString() {
-        return "Usuario: " + username;
+        // Retornamos solo el nombre para evitar exponer IDs en logs o UI
+        return username;
     }
 }

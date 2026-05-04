@@ -1,182 +1,212 @@
 package com.mycompany.fishgold.controllers;
 
-import com.mycompany.fishgold.models.*;
+import com.mycompany.fishgold.models.Trabajador;
+import com.mycompany.fishgold.models.TrabajadorDAO;
 import com.mycompany.fishgold.views.TrabajadorPanel;
 import com.mycompany.fishgold.util.Validator;
-import java.awt.Color;
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableModel;
 import java.util.List;
 
 public class TrabajadorController {
     private final TrabajadorPanel view;
     private final TrabajadorDAO dao;
-    private final CargoDAO cargoDAO;
-    private int idEditando = -1;
 
-    public TrabajadorController(TrabajadorPanel view, TrabajadorDAO dao, CargoDAO cargoDAO) {
+    public TrabajadorController(TrabajadorPanel view, TrabajadorDAO dao) {
         this.view = view;
         this.dao = dao;
-        this.cargoDAO = cargoDAO;
         init();
     }
 
     private void init() {
-        cargarTabla();
-        setupRealTimeValidation();
-        view.getCbPuestos().addActionListener(e -> {
-            boolean isOtro = "Otro".equals(view.getCbPuestos().getSelectedItem());
-            view.getTxtOtroPuesto().setEnabled(isOtro);
-            if (!isOtro)
-                view.getTxtOtroPuesto().setText("");
-        });
+        // Listeners de botones
+        view.getBtnAdd().addActionListener(e -> agregarTrabajador());
+        view.getBtnUpdate().addActionListener(e -> actualizarTrabajador());
+        view.getBtnDelete().addActionListener(e -> eliminarTrabajador());
+        view.getBtnClear().addActionListener(e -> limpiarFormulario());
 
-        view.getBtnGuardar().addActionListener(e -> guardar());
-        view.getBtnLimpiar().addActionListener(e -> limpiarFormulario());
-        view.getBtnEditar().addActionListener(e -> cargarParaEdicion());
-        view.getBtnEliminar().addActionListener(e -> eliminar());
-    }
-
-    private void setupRealTimeValidation() {
-        addLiveValidation(view.getTxtNombre(), "ALPHA");
-        addLiveValidation(view.getTxtEmergTelefono(), "PHONE");
-    }
-
-    private void addLiveValidation(JTextField field, String type) {
-        field.getDocument().addDocumentListener(new DocumentListener() {
+        // BUSQUEDA EN TIEMPO REAL: Reemplaza el listener del botón antiguo
+        view.getTxtSearch().getDocument().addDocumentListener(new DocumentListener() {
+            @Override
             public void insertUpdate(DocumentEvent e) {
-                check();
+                buscarTrabajador();
             }
 
+            @Override
             public void removeUpdate(DocumentEvent e) {
-                check();
+                buscarTrabajador();
             }
 
+            @Override
             public void changedUpdate(DocumentEvent e) {
-                check();
-            }
-
-            private void check() {
-                String val = field.getText().trim();
-                boolean ok = type.equals("ALPHA") ? Validator.isAlpha(val) : Validator.isValidPhone(val);
-                field.setBackground(ok || val.isEmpty() ? Color.WHITE : new Color(255, 210, 210));
+                buscarTrabajador();
             }
         });
+
+        // Sincronización Tabla -> Formulario
+        view.getTable().getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                seleccionarFila();
+            }
+        });
+
+        cargarTabla(dao.readAll());
     }
 
-    private void cargarTabla() {
-        view.getTableModel().setRowCount(0);
-        List<Trabajador> list = dao.readAll();
-        for (Trabajador t : list) {
-            view.getTableModel().addRow(new Object[] {
-                    t.getId(),
+    public void recargarTabla() {
+        cargarTabla(dao.readAll());
+    }
+
+    private void cargarTabla(List<Trabajador> lista) {
+        DefaultTableModel model = view.getTableModel();
+        model.setRowCount(0);
+        for (Trabajador t : lista) {
+            model.addRow(new Object[] {
+                    t.getId(), // Sigue en el modelo para lógica, pero oculto en vista
+                    t.getCedulaDni(),
                     t.getNombreCompleto(),
-                    t.isTieneLicencia() ? "Sí" : "No",
+                    t.getRolCargo(),
+                    t.getTelefono(),
                     t.getDireccion(),
-                    t.getContactoEmergenciaNombre() + " (" + t.getContactoEmergenciaRelacion() + ")",
-                    t.getContactoEmergenciaTelefono(),
-                    t.getPuestosAnteriores(),
-                    t.getEstado()
+                    t.getEstado(),
+                    t.getFechaRegistro()
             });
         }
     }
 
-    private void guardar() {
-        String nombre = view.getTxtNombre().getText().trim();
-        String cargoSelected = (String) view.getCbPuestos().getSelectedItem();
-        String cargoFinal = "Otro".equals(cargoSelected) ? view.getTxtOtroPuesto().getText().trim() : cargoSelected;
-
-        if (!Validator.isNotBlank(nombre) || !Validator.isNotBlank(view.getTxtEmergTelefono().getText())) {
-            JOptionPane.showMessageDialog(view, "Nombre y Teléfono son obligatorios.", "Validación",
-                    JOptionPane.WARNING_MESSAGE);
+    private void agregarTrabajador() {
+        Trabajador t = extraerDatosDeVista();
+        if (t == null)
             return;
-        }
 
-        Trabajador t = new Trabajador();
-        t.setNombreCompleto(nombre);
-        t.setTieneLicencia(view.isLicencia());
-        t.setDireccion(view.getTxtDireccion().getText().trim());
-        t.setContactoEmergenciaNombre(view.getTxtEmergNombre().getText().trim());
-        t.setContactoEmergenciaRelacion(view.getTxtEmergRelacion().getText().trim());
-        t.setContactoEmergenciaTelefono(view.getTxtEmergTelefono().getText().trim());
-        t.setPuestosAnteriores(cargoFinal);
-        t.setEstado(view.getCbEstado().getSelectedItem().toString());
-
-        boolean exito;
-        if (idEditando == -1) {
-            exito = dao.create(t);
-        } else {
-            t.setId(idEditando);
-            exito = dao.update(t);
-        }
-
-        if (exito) {
-            JOptionPane.showMessageDialog(view, "Operación exitosa.");
+        if (dao.create(t)) {
+            JOptionPane.showMessageDialog(view, "✅ Personal registrado correctamente.");
             limpiarFormulario();
-            cargarTabla();
+            cargarTabla(dao.readAll());
         } else {
-            JOptionPane.showMessageDialog(view, "Error al guardar en la base de datos.", "Error",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(view, "Error: La cédula ya existe o fallo de conexión.",
+                    "Error SQL", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void cargarParaEdicion() {
-        int row = view.getTable().getSelectedRow();
-        if (row == -1)
+    private void actualizarTrabajador() {
+        int fila = view.getTable().getSelectedRow();
+        if (fila == -1) {
+            JOptionPane.showMessageDialog(view, "Seleccione un trabajador de la tabla.");
+            return;
+        }
+
+        Trabajador t = extraerDatosDeVista();
+        if (t == null)
             return;
 
-        idEditando = (int) view.getTableModel().getValueAt(row, 0);
-        Trabajador t = dao.readById(idEditando);
+        // Recuperar ID de la columna 0 (oculta)
+        t.setId((int) view.getTable().getValueAt(fila, 0));
 
-        if (t != null) {
-            view.getTxtNombre().setText(t.getNombreCompleto());
-            view.setLicencia(t.isTieneLicencia());
-            view.getTxtDireccion().setText(t.getDireccion());
-            view.getTxtEmergNombre().setText(t.getContactoEmergenciaNombre());
-            view.getTxtEmergRelacion().setText(t.getContactoEmergenciaRelacion());
-            view.getTxtEmergTelefono().setText(t.getContactoEmergenciaTelefono());
-            view.getCbEstado().setSelectedItem(t.getEstado());
-
-            String p = t.getPuestosAnteriores();
-            DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) view.getCbPuestos().getModel();
-            if (model.getIndexOf(p) != -1) {
-                view.getCbPuestos().setSelectedItem(p);
-            } else {
-                view.getCbPuestos().setSelectedItem("Otro");
-                view.getTxtOtroPuesto().setText(p);
-            }
+        if (dao.update(t)) {
+            JOptionPane.showMessageDialog(view, "🔄 Datos actualizados.");
+            limpiarFormulario();
+            cargarTabla(dao.readAll());
         }
     }
 
-    private void eliminar() {
-        int row = view.getTable().getSelectedRow();
-        if (row == -1)
+    private void eliminarTrabajador() {
+        int fila = view.getTable().getSelectedRow();
+        if (fila == -1) {
+            JOptionPane.showMessageDialog(view, "Seleccione un trabajador.");
             return;
+        }
 
-        int id = (int) view.getTableModel().getValueAt(row, 0);
-        if (JOptionPane.showConfirmDialog(view, "¿Eliminar trabajador?", "Confirmar",
-                JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+        int id = (int) view.getTable().getValueAt(fila, 0);
+        int confirm = JOptionPane.showConfirmDialog(view,
+                "¿Eliminar este registro? Puede afectar el historial de faenas.", "Confirmar Baja",
+                JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
             if (dao.delete(id)) {
-                cargarTabla();
+                JOptionPane.showMessageDialog(view, "🗑 Trabajador eliminado.");
                 limpiarFormulario();
-            } else {
-                JOptionPane.showMessageDialog(view, "No se puede eliminar: tiene historial de faenas.");
+                cargarTabla(dao.readAll());
             }
         }
+    }
+
+    private void buscarTrabajador() {
+        String query = view.getTxtSearch().getText().trim();
+        cargarTabla(dao.search(query));
     }
 
     private void limpiarFormulario() {
-        idEditando = -1;
+        view.getTxtCedula().setText("");
         view.getTxtNombre().setText("");
-        view.setLicencia(false);
+        view.getCbRol().setSelectedIndex(0);
+        view.getTxtTelefono().setText("");
         view.getTxtDireccion().setText("");
-        view.getTxtEmergNombre().setText("");
-        view.getTxtEmergRelacion().setText("");
-        view.getTxtEmergTelefono().setText("");
-        view.getTxtOtroPuesto().setText("");
-        view.getTxtOtroPuesto().setEnabled(false);
-        view.getCbPuestos().setSelectedIndex(0);
+        view.getCbEstado().setSelectedIndex(0);
         view.getTable().clearSelection();
+
+        // Limpiar mensajes de error
+        view.getErrCedula().setText(" ");
+        view.getErrNombre().setText(" ");
+        view.getErrTelefono().setText(" ");
+
+        resetBorders();
+    }
+
+    private void seleccionarFila() {
+        int fila = view.getTable().getSelectedRow();
+        if (fila != -1) {
+            // Sincronizar datos usando los índices de columna (ID es 0)
+            view.getTxtCedula().setText(view.getTable().getValueAt(fila, 1).toString());
+            view.getTxtNombre().setText(view.getTable().getValueAt(fila, 2).toString());
+            view.getCbRol().setSelectedItem(view.getTable().getValueAt(fila, 3).toString());
+            view.getTxtTelefono().setText(
+                    view.getTable().getValueAt(fila, 4) != null ? view.getTable().getValueAt(fila, 4).toString() : "");
+            view.getTxtDireccion().setText(
+                    view.getTable().getValueAt(fila, 5) != null ? view.getTable().getValueAt(fila, 5).toString() : "");
+            view.getCbEstado().setSelectedItem(view.getTable().getValueAt(fila, 6).toString());
+        }
+    }
+
+    private Trabajador extraerDatosDeVista() {
+        // Reset de mensajes de error
+        view.getErrCedula().setText(" ");
+        view.getErrNombre().setText(" ");
+        view.getErrTelefono().setText(" ");
+
+        // Validaciones con feedback en los nuevos labels de error
+        boolean v1 = Validator.isNotBlank(view.getTxtCedula());
+        if (!v1)
+            view.getErrCedula().setText("⚠ Ingrese una cédula válida");
+
+        boolean v2 = Validator.isAlpha(view.getTxtNombre());
+        if (!v2)
+            view.getErrNombre().setText("⚠ Use solo letras");
+
+        boolean v3 = Validator.isValidPhone(view.getTxtTelefono());
+        if (!v3)
+            view.getErrTelefono().setText("⚠ Formato de teléfono incorrecto");
+
+        if (!(v1 && v2 && v3))
+            return null;
+
+        Trabajador t = new Trabajador();
+        t.setCedulaDni(view.getTxtCedula().getText().trim());
+        t.setNombreCompleto(view.getTxtNombre().getText().trim());
+        t.setRolCargo(view.getCbRol().getSelectedItem().toString());
+        t.setTelefono(view.getTxtTelefono().getText().trim());
+        t.setDireccion(view.getTxtDireccion().getText().trim());
+        t.setEstado(view.getCbEstado().getSelectedItem().toString());
+        return t;
+    }
+
+    private void resetBorders() {
+        Border defaultBorder = UIManager.getBorder("TextField.border");
+        view.getTxtCedula().setBorder(defaultBorder);
+        view.getTxtNombre().setBorder(defaultBorder);
+        view.getTxtTelefono().setBorder(defaultBorder);
     }
 }

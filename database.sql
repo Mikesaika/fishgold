@@ -1,56 +1,61 @@
-CREATE DATABASE IF NOT EXISTS fishgold_db;
+
+CREATE DATABASE fishgold_db;
 USE fishgold_db;
 
-CREATE TABLE IF NOT EXISTS usuarios (
+-- ==========================================================
+-- MÓDULO 1: TRABAJADORES (CRUD completo)
+-- ==========================================================
+CREATE TABLE trabajadores (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL
-);
-
-INSERT IGNORE INTO usuarios (username, password) VALUES ('admin', 'admin');
-
-CREATE TABLE IF NOT EXISTS trabajadores (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    cedula_dni VARCHAR(15) UNIQUE NOT NULL, -- Identificador único para búsquedas
     nombre_completo VARCHAR(150) NOT NULL,
-    tiene_licencia BOOLEAN NOT NULL,
-    direccion VARCHAR(255) NOT NULL,
-    contacto_emergencia_nombre VARCHAR(150) NOT NULL,
-    contacto_emergencia_relacion VARCHAR(50) NOT NULL,
-    contacto_emergencia_telefono VARCHAR(20) NOT NULL,
-    puestos_anteriores VARCHAR(255),
-    estado VARCHAR(20) DEFAULT 'Activo'
+    rol_cargo VARCHAR(50) NOT NULL,        -- Capitán, Motorista, Pescador, etc.
+    telefono VARCHAR(20),
+    direccion VARCHAR(255),
+    estado ENUM('Activo', 'Inactivo') DEFAULT 'Activo',
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS embarcaciones (
+-- ==========================================================
+-- MÓDULO 2: PLANIFICACIÓN (CRUD completo)
+-- ==========================================================
+CREATE TABLE planificaciones (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    propietario VARCHAR(150) NOT NULL,
-    modelo VARCHAR(100) NOT NULL,
-    capacidad INT NOT NULL,
-    anio_compra INT NOT NULL,
-    matricula VARCHAR(50) NOT NULL UNIQUE,
-    estado VARCHAR(20) DEFAULT 'Activa'
+    codigo_viaje VARCHAR(20) UNIQUE NOT NULL, -- Ej: VIAJE-2026-001
+    embarcacion_nombre VARCHAR(100) NOT NULL,
+    destino_ruta VARCHAR(150),
+    fecha_salida_programada DATE NOT NULL,
+    monto_base_tripulacion DECIMAL(12,2) NOT NULL, -- Pago total ofrecido
+    meta_peso_kg DECIMAL(10,2) NOT NULL,          -- Peso objetivo para el bono
+    estado ENUM('Pendiente', 'En Curso', 'Finalizado') DEFAULT 'Pendiente'
 );
 
-CREATE TABLE IF NOT EXISTS faenas (
+-- ==========================================================
+-- MÓDULO 3: FAENA (Solo Registro, Reporte y Búsqueda)
+-- ==========================================================
+CREATE TABLE faena_asistencia (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(150) NOT NULL,
-    fecha DATE NOT NULL,
-    hora_embarco TIME NOT NULL,
-    embarcacion_id INT NOT NULL,
-    ruta VARCHAR(255) NOT NULL,
-    estado VARCHAR(20) DEFAULT 'Pendiente',
-    FOREIGN KEY (embarcacion_id) REFERENCES embarcaciones(id)
-);
-
-CREATE TABLE IF NOT EXISTS tripulacion (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    faena_id INT NOT NULL,
+    planificacion_id INT NOT NULL,
     trabajador_id INT NOT NULL,
-    cargo VARCHAR(100) NOT NULL,
-    descripcion TEXT,
-    asistencia_embarco BOOLEAN DEFAULT NULL,
-    asistencia_desembarco BOOLEAN DEFAULT NULL,
-    FOREIGN KEY (faena_id) REFERENCES faenas(id) ON DELETE CASCADE,
-    FOREIGN KEY (trabajador_id) REFERENCES trabajadores(id) ON DELETE CASCADE
+    fecha_asistencia TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    -- Nota: No incluimos DELETE ni UPDATE en la lógica de la App para esta tabla
+    FOREIGN KEY (planificacion_id) REFERENCES planificaciones(id),
+    FOREIGN KEY (trabajador_id) REFERENCES trabajadores(id)
 );
+
+-- ==========================================================
+-- MÓDULO 4: CAPTURA Y LIQUIDACIÓN (Registro de Peso y Pago)
+-- ==========================================================
+CREATE TABLE liquidacion_captura (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    planificacion_id INT UNIQUE NOT NULL,
+    peso_total_pescado DECIMAL(10,2) NOT NULL,
+    monto_final_calculado DECIMAL(12,2), -- Aquí se guarda el base o el base + 15%
+    registrado_por_capitan VARCHAR(150),
+    fecha_cierre TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    observaciones TEXT,
+    FOREIGN KEY (planificacion_id) REFERENCES planificaciones(id)
+);
+-- Insertar un usuario inicial para que puedas entrar
+INSERT INTO usuarios (username, password, nombre_usuario, rol) 
+VALUES ('admin', 'admin123', 'Miguel Administrador', 'Administrador');

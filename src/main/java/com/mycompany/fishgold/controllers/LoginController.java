@@ -19,12 +19,14 @@ public class LoginController {
     }
 
     private void init() {
-
+        // Listeners vinculados a la acción de login
         this.view.getBtnLogin().addActionListener(e -> login());
-        // Permite dar 'Enter' en el campo de contraseña para loguear
+
+        // UX: Permite dar 'Enter' en los campos para no tener que usar el mouse
+        this.view.getTxtUsername().addActionListener(e -> login());
         this.view.getTxtPassword().addActionListener(e -> login());
 
-        this.view.setLocationRelativeTo(null); // Centrar ventana
+        this.view.setLocationRelativeTo(null); // Centrar ventana en pantalla
     }
 
     public void start() {
@@ -32,31 +34,50 @@ public class LoginController {
     }
 
     private void login() {
-        String username = view.getUsername().trim();
-        String password = view.getPassword().trim();
-        if (!Validator.isNotBlank(username) || !Validator.isNotBlank(password)) {
-            view.displayErrorMessage("Debe completar todos los campos.");
+        // 1. VALIDACIÓN VISUAL (Usando tu Validator mejorado)
+        // Esto marcará en rojo los campos vacíos automáticamente
+        boolean userOk = Validator.isNotBlank(view.getTxtUsername());
+        boolean passOk = Validator.isNotBlank(view.getTxtPassword());
+
+        if (!userOk || !passOk) {
+            view.displayErrorMessage("Por favor, complete las credenciales de acceso.");
             return;
         }
 
+        // 2. SEGURIDAD: Bloqueamos el botón para evitar múltiples clics mientras
+        // consulta SQL
+        view.getBtnLogin().setEnabled(false);
+
+        String username = view.getUsername().trim();
+        String password = view.getPassword().trim();
+
+        // 3. CONSULTA AL DAO
         Usuario user = dao.login(username, password);
 
         if (user != null) {
             handleSuccessfulLogin(user);
         } else {
-            view.displayErrorMessage("Usuario o contraseña incorrectos.");
+            view.getBtnLogin().setEnabled(true);
+            view.displayErrorMessage("Credenciales inválidas. Intente de nuevo.");
+            view.getTxtPassword().setText(""); // Limpiar contraseña por seguridad
+            view.getTxtPassword().requestFocus();
         }
     }
 
     private void handleSuccessfulLogin(Usuario user) {
+        // Feedback sólido estilo institucional
         JOptionPane.showMessageDialog(view,
-                "Bienvenido a Fishgold\nUsuario: " + user.getUsername().toUpperCase(),
-                "Acceso Concedido",
+                "Acceso autorizado para: " + user.getUsername().toUpperCase(),
+                "Sistema FishGold",
                 JOptionPane.INFORMATION_MESSAGE);
 
-        view.dispose();
+        view.dispose(); // Cerramos el login
 
+        // Iniciamos el sistema principal
         MainView mainView = new MainView();
+
+        // Pasamos el usuario logueado al MainController si necesitas
+        // mostrar su nombre en el Dashboard o controlar permisos
         MainController mainController = new MainController(mainView);
         mainController.start();
     }
