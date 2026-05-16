@@ -11,6 +11,7 @@ public class Planificacion {
     private double montoBaseTripulacion;
     private double metaPesoKg;
     private String estado;
+    private boolean activo = true;
 
     public Planificacion() {
     }
@@ -42,6 +43,8 @@ public class Planificacion {
     public void setMetaPesoKg(double metaPesoKg) { this.metaPesoKg = metaPesoKg; }
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
+    public boolean isActivo() { return activo; }
+    public void setActivo(boolean activo) { this.activo = activo; }
 
     @Override
     public String toString() {

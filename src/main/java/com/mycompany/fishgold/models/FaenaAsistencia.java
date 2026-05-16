@@ -7,6 +7,7 @@ public class FaenaAsistencia {
     private int planificacionId;
     private int trabajadorId;
     private Timestamp fechaAsistencia;
+    private String estadoAsistencia = "Presente";
 
     // Estos campos son vitales para el "Reporte Vivo" en la UI
     private String planificacionCodigo;
@@ -17,11 +18,12 @@ public class FaenaAsistencia {
 
     // Constructor completo para el Mapper del DAO
     public FaenaAsistencia(int id, int planificacionId, int trabajadorId, Timestamp fechaAsistencia,
-            String planificacionCodigo, String trabajadorNombre) {
+            String estadoAsistencia, String planificacionCodigo, String trabajadorNombre) {
         this.id = id;
         this.planificacionId = planificacionId;
         this.trabajadorId = trabajadorId;
         this.fechaAsistencia = fechaAsistencia;
+        this.estadoAsistencia = estadoAsistencia != null ? estadoAsistencia : "Presente";
         this.planificacionCodigo = planificacionCodigo;
         this.trabajadorNombre = trabajadorNombre;
     }
@@ -73,6 +75,14 @@ public class FaenaAsistencia {
 
     public void setTrabajadorNombre(String trabajadorNombre) {
         this.trabajadorNombre = trabajadorNombre;
+    }
+
+    public String getEstadoAsistencia() {
+        return estadoAsistencia;
+    }
+
+    public void setEstadoAsistencia(String estadoAsistencia) {
+        this.estadoAsistencia = estadoAsistencia;
     }
 
     @Override

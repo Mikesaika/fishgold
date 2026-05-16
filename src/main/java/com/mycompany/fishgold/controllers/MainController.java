@@ -38,7 +38,8 @@ public class MainController {
     private void initializeSubControllers() {
         // Inyectamos las dependencias necesarias a cada controlador hijo
         this.dashboardController = new DashboardController(
-                mainView.getDashboardPanel(), trabajadorDAO, planificacionDAO, liquidacionDAO);
+                mainView.getDashboardPanel(), trabajadorDAO, planificacionDAO, liquidacionDAO,
+                new DashboardDAO());
 
         this.trabajadorController = new TrabajadorController(
                 mainView.getTrabajadorPanel(), trabajadorDAO);

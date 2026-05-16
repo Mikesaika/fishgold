@@ -10,7 +10,7 @@ public class TrabajadorPanel extends JPanel {
     private DefaultTableModel tableModel;
     private JTextField txtCedula, txtNombre, txtTelefono, txtDireccion, txtSearch;
     private JComboBox<String> cbRol, cbEstado;
-    private JButton btnAdd, btnUpdate, btnDelete, btnClear, btnReporte;
+    private JButton btnAdd, btnUpdate, btnDelete, btnClear;
 
     // Etiquetas de Error para validación en tiempo real
     private JLabel errCedula, errNombre, errTelefono;
@@ -49,10 +49,7 @@ public class TrabajadorPanel extends JPanel {
         txtSearch.setPreferredSize(new Dimension(350, 40));
         txtSearch.putClientProperty("JTextField.placeholderText", "Escriba nombre, cédula o cargo para filtrar...");
 
-        btnReporte = createStyledButton("📄 Exportar Lista PDF", new Color(51, 65, 85));
-
         actionRow.add(txtSearch, BorderLayout.WEST);
-        actionRow.add(btnReporte, BorderLayout.EAST);
 
         topPanel.add(actionRow, BorderLayout.SOUTH);
         add(topPanel, BorderLayout.NORTH);
@@ -137,10 +134,10 @@ public class TrabajadorPanel extends JPanel {
         // Botonera
         JPanel actions = new JPanel(new GridLayout(2, 2, 12, 12));
         actions.setOpaque(false);
-        btnAdd = createStyledButton("✓ Guardar", COLOR_ACCENTO);
-        btnUpdate = createStyledButton("✎ Editar", COLOR_EXITO);
-        btnDelete = createStyledButton("🗑 Borrar", COLOR_PELIGRO);
-        btnClear = createStyledButton("⎙ Limpiar", COLOR_SECUNDARIO);
+        btnAdd = createStyledButton("Guardar", COLOR_ACCENTO);
+        btnUpdate = createStyledButton("Actualizar", COLOR_EXITO);
+        btnDelete = createStyledButton("Eliminar", COLOR_PELIGRO);
+        btnClear = createStyledButton("Limpiar", COLOR_SECUNDARIO);
 
         actions.add(btnAdd);
         actions.add(btnUpdate);
@@ -259,10 +256,6 @@ public class TrabajadorPanel extends JPanel {
 
     public JButton getBtnClear() {
         return btnClear;
-    }
-
-    public JButton getBtnReporte() {
-        return btnReporte;
     }
 
     // Getters para etiquetas de error

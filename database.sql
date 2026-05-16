@@ -47,7 +47,8 @@ CREATE TABLE IF NOT EXISTS planificaciones (
     destino_ruta VARCHAR(150) DEFAULT NULL,
     fecha_salida_programada DATE NOT NULL,
     meta_peso_kg DECIMAL(10,2) NOT NULL,
-    estado ENUM('Pendiente', 'En Curso', 'Finalizado') DEFAULT 'Pendiente'
+    estado ENUM('Pendiente', 'En Curso', 'Finalizado', 'Cancelada') DEFAULT 'Pendiente',
+    activo TINYINT(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ==========================================================
@@ -58,6 +59,7 @@ CREATE TABLE IF NOT EXISTS faena_asistencia (
     planificacion_id INT NOT NULL,
     trabajador_id INT NOT NULL,
     fecha_asistencia TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    estado_asistencia ENUM('Presente', 'Ausente', 'Justificado') NOT NULL DEFAULT 'Presente',
     FOREIGN KEY (planificacion_id) REFERENCES planificaciones(id) ON DELETE CASCADE,
     FOREIGN KEY (trabajador_id) REFERENCES trabajadores(id) ON DELETE CASCADE,
     UNIQUE KEY idx_viaje_trabajador (planificacion_id, trabajador_id)
@@ -85,6 +87,6 @@ CREATE TABLE IF NOT EXISTS liquidacion_captura (
 INSERT IGNORE INTO usuarios (username, password, nombre_usuario, rol) 
 VALUES ('admin', 'admin123', 'Miguel Administrador', 'Administrador');
 
--- Precio del kilo inicial ($5.00 como acordamos)
+-- Precio del kilo inicial (Verónica: $2.50 por kg)
 INSERT IGNORE INTO configuracion_pago (id, pago_kilo_base) 
-VALUES (1, 5.0);
+VALUES (1, 2.50);

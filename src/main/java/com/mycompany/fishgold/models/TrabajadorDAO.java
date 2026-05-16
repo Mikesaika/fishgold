@@ -8,33 +8,73 @@ import java.util.List;
 public class TrabajadorDAO {
 
     /**
-     * MÉTODO DE EXPERTO: Lee solo trabajadores activos que NO están en faenas
-     * vigentes.
-     * Cruza la tabla de trabajadores con asistencia y planificaciones para
-     * verificar disponibilidad.
+     * Activo y sin planificación "ocupada": asignado a un viaje activo que aún no tiene liquidación.
      */
     public List<Trabajador> readDisponibles() {
+        return readDisponiblesParaPlanificacion(null);
+    }
+
+    /**
+     * Trabajadores elegibles para tripulación. Si excludePlanId no es null, incluye también
+     * quienes ya están asignados a ese viaje (para poder editar la misma planificación).
+     */
+    public List<Trabajador> readDisponiblesParaPlanificacion(Integer excludePlanId) {
         List<Trabajador> lista = new ArrayList<>();
-        // SQL: Selecciona trabajadores Activos que NO tengan registros en
-        // faena_asistencia
-        // vinculados a planificaciones con estado 'Pendiente' o 'En Curso'.
-        String sql = "SELECT * FROM trabajadores WHERE estado = 'Activo' AND id NOT IN (" +
-                "  SELECT trabajador_id FROM faena_asistencia fa " +
-                "  JOIN planificaciones p ON fa.planificacion_id = p.id " +
-                "  WHERE p.estado IN ('Pendiente', 'En Curso')" +
-                ") ORDER BY nombre_completo ASC";
+        String ocupado = "SELECT fa.trabajador_id FROM faena_asistencia fa "
+                + "INNER JOIN planificaciones p ON fa.planificacion_id = p.id "
+                + "WHERE p.activo = 1 AND NOT EXISTS ("
+                + "  SELECT 1 FROM liquidacion_captura l WHERE l.planificacion_id = p.id)";
+
+        String sql;
+        if (excludePlanId != null && excludePlanId > 0) {
+            sql = "SELECT * FROM trabajadores WHERE estado = 'Activo' AND ( id NOT IN (" + ocupado + ") "
+                    + "OR id IN (SELECT trabajador_id FROM faena_asistencia WHERE planificacion_id = ?) ) "
+                    + "ORDER BY nombre_completo ASC";
+        } else {
+            sql = "SELECT * FROM trabajadores WHERE estado = 'Activo' AND id NOT IN (" + ocupado + ") "
+                    + "ORDER BY nombre_completo ASC";
+        }
 
         try (Connection con = DatabaseConnection.getConnection();
-                Statement st = con.createStatement();
-                ResultSet rs = st.executeQuery(sql)) {
-
-            while (rs.next()) {
-                lista.add(mapResultSet(rs));
+                PreparedStatement ps = con.prepareStatement(sql)) {
+            if (excludePlanId != null && excludePlanId > 0) {
+                ps.setInt(1, excludePlanId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(mapResultSet(rs));
+                }
             }
         } catch (SQLException e) {
             System.err.println("Error al leer trabajadores disponibles: " + e.getMessage());
         }
         return lista;
+    }
+
+    /** True si el trabajador está en algún viaje sin liquidar (distinto de excludePlanId si aplica). */
+    public boolean estaOcupadoSinLiquidar(int trabajadorId, Integer excludePlanId) {
+        String sql = "SELECT COUNT(*) FROM faena_asistencia fa "
+                + "INNER JOIN planificaciones p ON fa.planificacion_id = p.id "
+                + "WHERE fa.trabajador_id = ? AND p.activo = 1 "
+                + "AND NOT EXISTS (SELECT 1 FROM liquidacion_captura l WHERE l.planificacion_id = p.id) ";
+        if (excludePlanId != null && excludePlanId > 0) {
+            sql += "AND p.id <> ?";
+        }
+        try (Connection con = DatabaseConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, trabajadorId);
+            if (excludePlanId != null && excludePlanId > 0) {
+                ps.setInt(2, excludePlanId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     public boolean create(Trabajador trabajador) {
@@ -48,6 +88,25 @@ public class TrabajadorDAO {
             System.err.println("Error al crear trabajador: " + e.getMessage());
             return false;
         }
+    }
+
+    public List<Trabajador> readByPlanificacion(int planificacionId) {
+        List<Trabajador> lista = new ArrayList<>();
+        String sql = "SELECT t.* FROM trabajadores t "
+                + "INNER JOIN faena_asistencia fa ON fa.trabajador_id = t.id "
+                + "WHERE fa.planificacion_id = ? ORDER BY t.nombre_completo ASC";
+        try (Connection con = DatabaseConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, planificacionId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(mapResultSet(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al leer tripulación del viaje: " + e.getMessage());
+        }
+        return lista;
     }
 
     public List<Trabajador> readAll() {

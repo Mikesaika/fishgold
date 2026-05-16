@@ -12,18 +12,16 @@ public class LiquidacionCapturaPanel extends JPanel {
     private JComboBox<Planificacion> cbPlanificacion;
     private JTextField txtPesoPescado, txtCapitan, txtSearch;
     private JTextArea txtObservaciones;
-    private JButton btnAdd, btnUpdate, btnDelete, btnClear, btnReporte;
-
-    // COMPONENTE EXPERTO: Label para previsualizar el cálculo en tiempo real
+    private JButton btnAdd, btnEliminar;
     private JLabel lblPreviewCalculo;
-    private JLabel errPlanificacion, errPeso, errCapitan;
+    private JLabel errPeso, errCapitan;
 
-    private final Color COLOR_FONDO = new Color(248, 250, 252);
-    private final Color COLOR_ACCENTO = new Color(37, 99, 235);
-    private final Color COLOR_EXITO = new Color(22, 163, 74);
-    private final Color COLOR_PELIGRO = new Color(220, 38, 38);
-    private final Color COLOR_SECUNDARIO = new Color(71, 85, 105);
-    private final Color COLOR_DARK = new Color(15, 23, 42);
+    private final Color COLOR_FONDO = new Color(245, 247, 250);
+    private final Color COLOR_ACCENTO = new Color(52, 152, 219);
+    private final Color COLOR_EXITO = new Color(39, 174, 96);
+    private final Color COLOR_PELIGRO = new Color(231, 76, 60);
+    private final Color COLOR_SECUNDARIO = new Color(127, 140, 141);
+    private final Color COLOR_DARK = new Color(44, 62, 80);
 
     public LiquidacionCapturaPanel() {
         setLayout(new BorderLayout(30, 0));
@@ -39,7 +37,7 @@ public class LiquidacionCapturaPanel extends JPanel {
         JPanel topPanel = new JPanel(new BorderLayout(0, 25));
         topPanel.setOpaque(false);
 
-        JLabel lblTitle = new JLabel("Liquidación y Pesca");
+        JLabel lblTitle = new JLabel("Liquidación y cierre de faena");
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 32));
         lblTitle.setForeground(COLOR_DARK);
         topPanel.add(lblTitle, BorderLayout.NORTH);
@@ -49,19 +47,14 @@ public class LiquidacionCapturaPanel extends JPanel {
 
         txtSearch = new JTextField(22);
         txtSearch.setPreferredSize(new Dimension(300, 40));
-        txtSearch.putClientProperty("JTextField.placeholderText", "Escriba el código del viaje o capitán...");
-
-        btnReporte = createStyledButton("📄 Exportar Reporte PDF", new Color(51, 65, 85));
+        txtSearch.putClientProperty("JTextField.placeholderText", "Buscar por código de viaje o capitán...");
 
         actionRow.add(txtSearch, BorderLayout.WEST);
-        actionRow.add(btnReporte, BorderLayout.EAST);
-
         topPanel.add(actionRow, BorderLayout.SOUTH);
         add(topPanel, BorderLayout.NORTH);
     }
 
     private void initTableSection() {
-        // CORRECCIÓN: La tabla ahora es la evidencia del cálculo procesado
         String[] columns = { "ID", "Planificación", "Captura (Kg)", "Pago Total ($)", "Responsable", "Fecha", "Notas" };
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -94,12 +87,19 @@ public class LiquidacionCapturaPanel extends JPanel {
         gbc.gridx = 0;
         int y = 0;
 
-        JLabel lblFormTitle = new JLabel("CIERRE DE FAENA");
+        JLabel lblFormTitle = new JLabel("NUEVA LIQUIDACIÓN");
         lblFormTitle.setFont(new Font("Segoe UI", Font.BOLD, 14));
         lblFormTitle.setForeground(COLOR_ACCENTO);
         gbc.gridy = y++;
-        gbc.insets = new Insets(0, 0, 20, 0);
+        gbc.insets = new Insets(0, 0, 8, 0);
         sidebar.add(lblFormTitle, gbc);
+
+        JLabel lblAyuda = new JLabel("<html><body style='width:280px'>Para corregir un error, elimine la liquidación seleccionada en la tabla y registre una nueva captura.</body></html>");
+        lblAyuda.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        lblAyuda.setForeground(COLOR_SECUNDARIO);
+        gbc.gridy = y++;
+        gbc.insets = new Insets(0, 0, 16, 0);
+        sidebar.add(lblAyuda, gbc);
 
         cbPlanificacion = new JComboBox<>();
         txtPesoPescado = new JTextField();
@@ -107,14 +107,12 @@ public class LiquidacionCapturaPanel extends JPanel {
         txtObservaciones = new JTextArea(3, 15);
         txtObservaciones.setLineWrap(true);
 
-        // --- CAMPOS CON FEEDBACK ---
         addLabeledField("VIAJE A FINALIZAR", cbPlanificacion, sidebar, gbc, y++);
-        errPlanificacion = addErrorLabel(sidebar, gbc, y++);
+        y++;
 
         addLabeledField("PESO REAL CAPTURADO (KG)", txtPesoPescado, sidebar, gbc, y++);
         errPeso = addErrorLabel(sidebar, gbc, y++);
 
-        // PANEL DE CÁLCULO EN TIEMPO REAL
         JPanel calculoPanel = new JPanel(new BorderLayout());
         calculoPanel.setBackground(new Color(248, 250, 252));
         calculoPanel.setBorder(BorderFactory.createCompoundBorder(
@@ -126,7 +124,7 @@ public class LiquidacionCapturaPanel extends JPanel {
         lblPreviewCalculo.setForeground(COLOR_EXITO);
         lblPreviewCalculo.setHorizontalAlignment(SwingConstants.CENTER);
 
-        JLabel lblInfo = new JLabel("MONTO ESTIMADO A PAGAR");
+        JLabel lblInfo = new JLabel("MONTO ESTIMADO");
         lblInfo.setFont(new Font("Segoe UI", Font.BOLD, 10));
         lblInfo.setForeground(COLOR_SECUNDARIO);
         lblInfo.setHorizontalAlignment(SwingConstants.CENTER);
@@ -146,18 +144,13 @@ public class LiquidacionCapturaPanel extends JPanel {
         gbc.insets = new Insets(0, 0, 20, 0);
         sidebar.add(Box.createVerticalStrut(5), gbc);
 
-        // Botonera
-        JPanel actions = new JPanel(new GridLayout(2, 2, 10, 10));
+        JPanel actions = new JPanel(new GridLayout(2, 1, 10, 10));
         actions.setOpaque(false);
-        btnAdd = createStyledButton("✓ Finalizar y Pagar", COLOR_ACCENTO);
-        btnUpdate = createStyledButton("✎ Editar", COLOR_EXITO);
-        btnDelete = createStyledButton("🗑 Borrar", COLOR_PELIGRO);
-        btnClear = createStyledButton("⎙ Limpiar", COLOR_SECUNDARIO);
+        btnAdd = createStyledButton("Finalizar y pagar", COLOR_ACCENTO);
+        btnEliminar = createStyledButton("Eliminar liquidación seleccionada", COLOR_PELIGRO);
 
         actions.add(btnAdd);
-        actions.add(btnUpdate);
-        actions.add(btnDelete);
-        actions.add(btnClear);
+        actions.add(btnEliminar);
 
         gbc.gridy = y++;
         sidebar.add(actions, gbc);
@@ -206,31 +199,18 @@ public class LiquidacionCapturaPanel extends JPanel {
 
     private void styleTable(JTable table) {
         table.setRowHeight(50);
-        table.setSelectionBackground(new Color(239, 246, 255));
+        table.setSelectionBackground(new Color(232, 244, 253));
         table.setSelectionForeground(COLOR_ACCENTO);
         table.getTableHeader().setPreferredSize(new Dimension(0, 50));
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
     }
 
-    // --- GETTERS ---
     public JButton getBtnAdd() {
         return btnAdd;
     }
 
-    public JButton getBtnUpdate() {
-        return btnUpdate;
-    }
-
-    public JButton getBtnDelete() {
-        return btnDelete;
-    }
-
-    public JButton getBtnClear() {
-        return btnClear;
-    }
-
-    public JButton getBtnReporte() {
-        return btnReporte;
+    public JButton getBtnEliminar() {
+        return btnEliminar;
     }
 
     public JTable getTable() {

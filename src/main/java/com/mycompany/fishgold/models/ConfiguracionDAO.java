@@ -26,14 +26,14 @@ public class ConfiguracionDAO {
             } else {
                 // Si por alguna razón no existe el ID 1, lo insertamos con un valor base de
                 // $5.00
-                insertDefault(5.0);
+                insertDefault(2.50);
             }
         } catch (SQLException e) {
             System.err.println("Error crítico en ConfiguracionDAO.getActual: " + e.getMessage());
         }
 
         // Retorno de emergencia para que la App no explote
-        return new Configuracion(1, 5.0);
+        return new Configuracion(1, 2.50);
     }
 
     /**

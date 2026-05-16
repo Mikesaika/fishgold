@@ -28,14 +28,14 @@ public class ConfiguracionController {
 
     private void guardar() {
         if (!Validator.isDecimal(view.getTxtPagoBase())) {
-            view.setFeedback("⚠ Ingrese un valor numérico válido.");
+            view.setFeedback("Ingrese un valor numérico válido.");
             return;
         }
 
         double nuevoPrecio = Double.parseDouble(view.getTxtPagoBase().getText());
 
         if (dao.update(nuevoPrecio)) {
-            view.setFeedback("✅ Configuración guardada correctamente.");
+            view.setFeedback("Configuración guardada correctamente.");
             // Ocultar mensaje de éxito tras 3 segundos
             new Timer(3000, e -> view.setFeedback(" ")).start();
         }

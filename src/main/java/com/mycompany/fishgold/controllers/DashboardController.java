@@ -10,13 +10,16 @@ public class DashboardController {
     private final TrabajadorDAO trabajadorDAO;
     private final PlanificacionDAO planificacionDAO;
     private final LiquidacionCapturaDAO liquidacionDAO;
+    private final DashboardDAO dashboardDAO;
 
     public DashboardController(DashboardPanel view, TrabajadorDAO trabajadorDAO,
-            PlanificacionDAO planificacionDAO, LiquidacionCapturaDAO liquidacionDAO) {
+            PlanificacionDAO planificacionDAO, LiquidacionCapturaDAO liquidacionDAO,
+            DashboardDAO dashboardDAO) {
         this.view = view;
         this.trabajadorDAO = trabajadorDAO;
         this.planificacionDAO = planificacionDAO;
         this.liquidacionDAO = liquidacionDAO;
+        this.dashboardDAO = dashboardDAO;
         init();
     }
 
@@ -26,45 +29,38 @@ public class DashboardController {
     }
 
     public void actualizarDatos() {
-        setLabelsText("...");
+        setLabelsText("…");
         view.getBtnActualizar().setEnabled(false);
         new DashboardWorker().execute();
     }
 
-    // Usamos Object[] para poder mezclar Integers y Strings (para el dinero
-    // formateado)
     private class DashboardWorker extends SwingWorker<Object[], Void> {
         @Override
-        protected Object[] doInBackground() throws Exception {
-            // 1. Personal Activo
+        protected Object[] doInBackground() {
             int activos = trabajadorDAO.countByEstado("Activo");
-
-            // 2. Operatividad: Viajes que están ocupando recursos
             int operativos = planificacionDAO.countByEstado("Pendiente") +
                     planificacionDAO.countByEstado("En Curso");
-
-            // 3. LÓGICA DE EXPERTO: Total de dinero producido por las capturas
-            // Sumamos todos los montos finales calculados automáticamente
             double ingresoTotal = liquidacionDAO.readAll().stream()
                     .mapToDouble(LiquidacionCaptura::getMontoFinalCalculado)
                     .sum();
-
-            return new Object[] { activos, operativos, ingresoTotal };
+            double kilosSemana = dashboardDAO.kilosTotalesSemana();
+            int totalLiq = dashboardDAO.countLiquidacionesTotales();
+            int[] asist7 = dashboardDAO.conteoAsistenciasUltimos7Dias();
+            return new Object[] { activos, operativos, ingresoTotal, kilosSemana, totalLiq, asist7 };
         }
 
         @Override
         protected void done() {
             try {
                 Object[] datos = get();
-
-                // Actualización de la UI con los datos reales
                 view.getLblTotalTrabajadores().setText(String.valueOf(datos[0]));
                 view.getLblViajesPendientes().setText(String.valueOf(datos[1]));
-
-                // Formateo de moneda para la tarjeta de ingresos
                 double total = (double) datos[2];
                 view.getLblTotalCapturas().setText("$" + String.format("%.0f", total));
-
+                double kg = (double) datos[3];
+                view.getLblKilosSemana().setText(String.format("%.1f kg", kg));
+                view.getLblTotalLiquidaciones().setText(String.valueOf(datos[4]));
+                view.setDatosAsistenciaChart((int[]) datos[5]);
             } catch (InterruptedException | ExecutionException e) {
                 setLabelsText("Error");
             } finally {
@@ -77,5 +73,7 @@ public class DashboardController {
         view.getLblTotalTrabajadores().setText(text);
         view.getLblViajesPendientes().setText(text);
         view.getLblTotalCapturas().setText(text);
+        view.getLblKilosSemana().setText(text);
+        view.getLblTotalLiquidaciones().setText(text);
     }
 }

@@ -130,9 +130,60 @@ public class PlanificacionDAO {
         }
     }
 
+    public int countAsistencias(int planificacionId) {
+        String sql = "SELECT COUNT(*) FROM faena_asistencia WHERE planificacion_id = ?";
+        try (Connection con = DatabaseConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, planificacionId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int countLiquidaciones(int planificacionId) {
+        String sql = "SELECT COUNT(*) FROM liquidacion_captura WHERE planificacion_id = ?";
+        try (Connection con = DatabaseConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, planificacionId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public boolean tieneDependencias(int planificacionId) {
+        return countAsistencias(planificacionId) > 0 || countLiquidaciones(planificacionId) > 0;
+    }
+
+    /**
+     * Desactiva la planificación (soft delete). No borra filas hijas.
+     */
+    public boolean softDelete(int id) {
+        String sql = "UPDATE planificaciones SET activo = 0, estado = 'Cancelada' WHERE id = ? AND activo = 1";
+        try (Connection con = DatabaseConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public List<Planificacion> readAll() {
         List<Planificacion> lista = new ArrayList<>();
-        String sql = "SELECT * FROM planificaciones ORDER BY id DESC";
+        String sql = "SELECT * FROM planificaciones WHERE activo = 1 ORDER BY id DESC";
         try (Connection con = DatabaseConnection.getConnection();
                 Statement st = con.createStatement();
                 ResultSet rs = st.executeQuery(sql)) {
@@ -163,50 +214,9 @@ public class PlanificacionDAO {
         }
     }
 
-    /**
-     * Borrado SEGURO: Limpia la asistencia antes de borrar la planificación.
-     */
-    public boolean delete(int id) {
-        String sqlAsis = "DELETE FROM faena_asistencia WHERE planificacion_id=?";
-        String sqlPlan = "DELETE FROM planificaciones WHERE id=?";
-
-        Connection con = null;
-        try {
-            con = DatabaseConnection.getConnection();
-            con.setAutoCommit(false);
-
-            try (PreparedStatement psAsis = con.prepareStatement(sqlAsis)) {
-                psAsis.setInt(1, id);
-                psAsis.executeUpdate();
-            }
-
-            try (PreparedStatement psPlan = con.prepareStatement(sqlPlan)) {
-                psPlan.setInt(1, id);
-                int rows = psPlan.executeUpdate();
-                con.commit();
-                return rows > 0;
-            }
-        } catch (SQLException e) {
-            if (con != null)
-                try {
-                    con.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            return false;
-        } finally {
-            if (con != null)
-                try {
-                    con.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-        }
-    }
-
     public List<Planificacion> search(String query) {
         List<Planificacion> lista = new ArrayList<>();
-        String sql = "SELECT * FROM planificaciones WHERE codigo_viaje LIKE ? OR embarcacion_nombre LIKE ?";
+        String sql = "SELECT * FROM planificaciones WHERE activo = 1 AND (codigo_viaje LIKE ? OR embarcacion_nombre LIKE ?)";
         try (Connection con = DatabaseConnection.getConnection();
                 PreparedStatement ps = con.prepareStatement(sql)) {
             String param = "%" + query + "%";
@@ -228,7 +238,7 @@ public class PlanificacionDAO {
      * Útil para las estadísticas del Dashboard.
      */
     public int countByEstado(String estado) {
-        String sql = "SELECT COUNT(*) FROM planificaciones WHERE estado = ?";
+        String sql = "SELECT COUNT(*) FROM planificaciones WHERE estado = ? AND activo = 1";
         try (Connection con = DatabaseConnection.getConnection();
                 PreparedStatement ps = con.prepareStatement(sql)) {
 
@@ -254,6 +264,11 @@ public class PlanificacionDAO {
         p.setFechaSalidaProgramada(rs.getDate("fecha_salida_programada"));
         p.setMetaPesoKg(rs.getDouble("meta_peso_kg"));
         p.setEstado(rs.getString("estado"));
+        try {
+            p.setActivo(rs.getBoolean("activo"));
+        } catch (SQLException ignored) {
+            p.setActivo(true);
+        }
         return p;
     }
 }

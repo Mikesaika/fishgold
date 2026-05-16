@@ -2,6 +2,7 @@ package com.mycompany.fishgold.controllers;
 
 import com.mycompany.fishgold.models.*;
 import com.mycompany.fishgold.views.FaenaAsistenciaPanel;
+import com.mycompany.fishgold.views.FaenaAsistenciaPanel.TripulanteFila;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -24,12 +25,10 @@ public class FaenaAsistenciaController {
     }
 
     private void init() {
-        // Listeners de botones
-        view.getBtnAdd().addActionListener(e -> registrarAsistencia());
+        view.getBtnGuardarTodo().addActionListener(e -> guardarTodo());
         view.getBtnRefresh().addActionListener(e -> recargarVista());
-        view.getBtnClear().addActionListener(e -> limpiarFormulario());
+        view.getCbPlanificacion().addActionListener(e -> cargarTripulacionDelViaje());
 
-        // BÚSQUEDA EN TIEMPO REAL: Implementación de DocumentListener
         view.getTxtSearch().getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
@@ -47,78 +46,118 @@ public class FaenaAsistenciaController {
             }
         });
 
-        // Sincronización de tabla
-        view.getTable().getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                seleccionarFila();
-            }
-        });
-
         recargarVista();
     }
 
     public void recargarVista() {
         cargarCombos();
         cargarTabla(dao.readAll());
-        limpiarFormulario();
+        cargarTripulacionDelViaje();
     }
 
     private void cargarCombos() {
         view.getCbPlanificacion().removeAllItems();
-        view.getCbTrabajador().removeAllItems();
-
-        // Filtro: Solo viajes no finalizados
         planDAO.readAll().stream()
-                .filter(p -> !p.getEstado().equalsIgnoreCase("Finalizado"))
+                .filter(p -> p.isActivo())
+                .filter(p -> !"Finalizado".equalsIgnoreCase(p.getEstado()))
+                .filter(p -> !"Cancelada".equalsIgnoreCase(p.getEstado()))
+                .filter(p -> planDAO.countLiquidaciones(p.getId()) == 0)
                 .forEach(view.getCbPlanificacion()::addItem);
-
-        // Filtro: Solo personal activo
-        trabDAO.readAll().stream()
-                .filter(t -> t.getEstado().equalsIgnoreCase("Activo"))
-                .forEach(view.getCbTrabajador()::addItem);
     }
 
+    private void cargarTripulacionDelViaje() {
+        view.limpiarFilasTripulantes();
+        view.getErrPlanificacion().setText(" ");
+
+        Planificacion p = (Planificacion) view.getCbPlanificacion().getSelectedItem();
+        if (p == null) {
+            return;
+        }
+
+        for (Trabajador t : trabDAO.readByPlanificacion(p.getId())) {
+            FaenaAsistencia fa = dao.findByPlanificacionYTrabajador(p.getId(), t.getId());
+            String est = fa != null ? fa.getEstadoAsistencia() : "Presente";
+            view.agregarFilaTripulante(t, est);
+        }
+        view.finalizarFilas();
+    }
+
+    private boolean viajePermiteAsistencia(Planificacion p) {
+        if (p == null) {
+            view.getErrPlanificacion().setText("Seleccione un viaje.");
+            return false;
+        }
+        if ("Finalizado".equalsIgnoreCase(p.getEstado()) || "Cancelada".equalsIgnoreCase(p.getEstado())) {
+            JOptionPane.showMessageDialog(view,
+                    "No se puede registrar asistencia: el viaje está cerrado o cancelado.",
+                    "Viaje no disponible", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        if (planDAO.countLiquidaciones(p.getId()) > 0) {
+            JOptionPane.showMessageDialog(view,
+                    "No se puede registrar asistencia: el viaje ya tiene liquidación.",
+                    "Viaje liquidado", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        view.getErrPlanificacion().setText(" ");
+        return true;
+    }
+
+private void guardarTodo() {
+        Planificacion p = (Planificacion) view.getCbPlanificacion().getSelectedItem();
+        if (!viajePermiteAsistencia(p)) {
+            return;
+        }
+
+        List<TripulanteFila> filas = view.getFilasTripulantes();
+        if (filas.isEmpty()) {
+            JOptionPane.showMessageDialog(view, "No hay tripulantes asignados a este viaje.");
+            return;
+        }
+
+        // ¡AQUÍ ESTÁ LA SOLUCIÓN! Declaramos la variable 'ok' como entero e inicializamos en 0
+        int ok = 0; 
+
+        for (TripulanteFila fila : filas) {
+            Trabajador t = fila.getTrabajador();
+            String estado = fila.getEstadoParaGuardar();
+            FaenaAsistencia existente = dao.findByPlanificacionYTrabajador(p.getId(), t.getId());
+            if (existente != null) {
+                if (!estado.equals(existente.getEstadoAsistencia())) {
+                    if (dao.updateEstado(existente.getId(), estado)) {
+                        ok++;
+                    }
+                } else {
+                    ok++;
+                }
+                fila.refrescarDesdeBd(estado);
+            } else {
+                FaenaAsistencia fa = new FaenaAsistencia();
+                fa.setPlanificacionId(p.getId());
+                fa.setTrabajadorId(t.getId());
+                fa.setEstadoAsistencia(estado);
+                if (dao.create(fa)) {
+                    ok++;
+                    fila.refrescarDesdeBd(estado);
+                }
+            }
+        }
+
+        JOptionPane.showMessageDialog(view,
+                "Se procesaron las asistencias del viaje " + p.getCodigoViaje() + " (" + ok + " registros).");
+        cargarTabla(dao.readAll());
+    }
     private void cargarTabla(List<FaenaAsistencia> lista) {
         DefaultTableModel model = view.getTableModel();
         model.setRowCount(0);
         for (FaenaAsistencia fa : lista) {
             model.addRow(new Object[] {
-                    fa.getId(), // Sigue en el modelo pero oculto en la vista
+                    fa.getId(),
                     fa.getPlanificacionCodigo(),
                     fa.getTrabajadorNombre(),
+                    fa.getEstadoAsistencia(),
                     fa.getFechaAsistencia()
             });
-        }
-    }
-
-    private void registrarAsistencia() {
-        // Limpiar errores visuales previos
-        view.getErrPlanificacion().setText(" ");
-        view.getErrTrabajador().setText(" ");
-
-        Planificacion p = (Planificacion) view.getCbPlanificacion().getSelectedItem();
-        Trabajador t = (Trabajador) view.getCbTrabajador().getSelectedItem();
-
-        // Validación con feedback en los nuevos labels de la vista
-        if (p == null) {
-            view.getErrPlanificacion().setText("⚠ Seleccione un viaje");
-            return;
-        }
-        if (t == null) {
-            view.getErrTrabajador().setText("⚠ Seleccione un trabajador");
-            return;
-        }
-
-        FaenaAsistencia fa = new FaenaAsistencia();
-        fa.setPlanificacionId(p.getId());
-        fa.setTrabajadorId(t.getId());
-
-        if (dao.create(fa)) {
-            JOptionPane.showMessageDialog(view, "✅ Asistencia confirmada.");
-            recargarVista();
-        } else {
-            JOptionPane.showMessageDialog(view, "Este trabajador ya está registrado en este viaje.",
-                    "Registro Duplicado", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -128,25 +167,6 @@ public class FaenaAsistenciaController {
             cargarTabla(dao.readAll());
         } else {
             cargarTabla(dao.search(query));
-        }
-    }
-
-    private void limpiarFormulario() {
-        if (view.getCbPlanificacion().getItemCount() > 0)
-            view.getCbPlanificacion().setSelectedIndex(0);
-        if (view.getCbTrabajador().getItemCount() > 0)
-            view.getCbTrabajador().setSelectedIndex(0);
-
-        view.getErrPlanificacion().setText(" ");
-        view.getErrTrabajador().setText(" ");
-        view.getTable().clearSelection();
-    }
-
-    private void seleccionarFila() {
-        int fila = view.getTable().getSelectedRow();
-        if (fila != -1) {
-            // Log informativo usando la columna oculta ID (índice 0)
-            System.out.println("ID Asistencia: " + view.getTable().getValueAt(fila, 0));
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.mycompany.fishgold.models;
 
 import com.mycompany.fishgold.util.DatabaseConnection;
+import com.mycompany.fishgold.util.LiquidacionCalculo;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,16 +46,7 @@ public class LiquidacionCapturaDAO {
                 }
             }
 
-            // 3. LÓGICA DE NEGOCIO ACTUALIZADA: Pago por kilo + Exceso al Doble
-            double montoFinal = 0;
-            if (pesoReal > metaPeso) {
-                double exceso = pesoReal - metaPeso;
-                // Kilos hasta la meta al precio base + Exceso al doble
-                montoFinal = (metaPeso * precioBase) + (exceso * (precioBase * 2));
-            } else {
-                // Si no superó la meta, se paga todo al precio base
-                montoFinal = pesoReal * precioBase;
-            }
+            double montoFinal = LiquidacionCalculo.calcularMonto(pesoReal, metaPeso, precioBase);
 
             // 4. Insertar Liquidación
             try (PreparedStatement psIns = con.prepareStatement(sqlInsert)) {
@@ -75,6 +67,67 @@ public class LiquidacionCapturaDAO {
             con.commit(); // CONFIRMACIÓN TOTAL
             return true;
 
+        } catch (SQLException e) {
+            if (con != null) {
+                try {
+                    con.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    /**
+     * Elimina la liquidación y deja el viaje nuevamente pendiente para poder registrar una nueva captura.
+     */
+    public boolean deleteById(int liquidacionId) {
+        String sqlPlan = "SELECT planificacion_id FROM liquidacion_captura WHERE id = ?";
+        String sqlDel = "DELETE FROM liquidacion_captura WHERE id = ?";
+        String sqlPlanUpd = "UPDATE planificaciones SET estado = 'Pendiente' WHERE id = ? AND estado = 'Finalizado'";
+
+        Connection con = null;
+        try {
+            con = DatabaseConnection.getConnection();
+            con.setAutoCommit(false);
+
+            int planId = -1;
+            try (PreparedStatement ps = con.prepareStatement(sqlPlan)) {
+                ps.setInt(1, liquidacionId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) {
+                        con.rollback();
+                        return false;
+                    }
+                    planId = rs.getInt("planificacion_id");
+                }
+            }
+
+            try (PreparedStatement ps = con.prepareStatement(sqlDel)) {
+                ps.setInt(1, liquidacionId);
+                if (ps.executeUpdate() <= 0) {
+                    con.rollback();
+                    return false;
+                }
+            }
+
+            try (PreparedStatement ps = con.prepareStatement(sqlPlanUpd)) {
+                ps.setInt(1, planId);
+                ps.executeUpdate();
+            }
+
+            con.commit();
+            return true;
         } catch (SQLException e) {
             if (con != null) {
                 try {

@@ -83,7 +83,7 @@ public class TrabajadorController {
             return;
 
         if (dao.create(t)) {
-            JOptionPane.showMessageDialog(view, "✅ Personal registrado correctamente.");
+            JOptionPane.showMessageDialog(view, "Personal registrado correctamente.");
             limpiarFormulario();
             cargarTabla(dao.readAll());
         } else {
@@ -107,7 +107,7 @@ public class TrabajadorController {
         t.setId((int) view.getTable().getValueAt(fila, 0));
 
         if (dao.update(t)) {
-            JOptionPane.showMessageDialog(view, "🔄 Datos actualizados.");
+            JOptionPane.showMessageDialog(view, "Datos actualizados.");
             limpiarFormulario();
             cargarTabla(dao.readAll());
         }
@@ -127,7 +127,7 @@ public class TrabajadorController {
 
         if (confirm == JOptionPane.YES_OPTION) {
             if (dao.delete(id)) {
-                JOptionPane.showMessageDialog(view, "🗑 Trabajador eliminado.");
+                JOptionPane.showMessageDialog(view, "Trabajador eliminado.");
                 limpiarFormulario();
                 cargarTabla(dao.readAll());
             }
@@ -180,15 +180,15 @@ public class TrabajadorController {
         // Validaciones con feedback en los nuevos labels de error
         boolean v1 = Validator.isNotBlank(view.getTxtCedula());
         if (!v1)
-            view.getErrCedula().setText("⚠ Ingrese una cédula válida");
+            view.getErrCedula().setText("Ingrese una cédula válida");
 
         boolean v2 = Validator.isAlpha(view.getTxtNombre());
         if (!v2)
-            view.getErrNombre().setText("⚠ Use solo letras");
+            view.getErrNombre().setText("Use solo letras");
 
         boolean v3 = Validator.isValidPhone(view.getTxtTelefono());
         if (!v3)
-            view.getErrTelefono().setText("⚠ Formato de teléfono incorrecto");
+            view.getErrTelefono().setText("Formato de teléfono incorrecto");
 
         if (!(v1 && v2 && v3))
             return null;

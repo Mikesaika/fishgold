@@ -2,222 +2,298 @@ package com.mycompany.fishgold.views;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import com.mycompany.fishgold.models.Planificacion;
 import com.mycompany.fishgold.models.Trabajador;
-import javax.swing.table.DefaultTableModel;
 
 /**
- * FaenaAsistenciaPanel: Versión de Auditoría.
- * Centraliza la visualización de quiénes están asignados a cada viaje.
+ * Asistencia: lista clara de tripulantes con botones por fila y guardado conjunto.
  */
 public class FaenaAsistenciaPanel extends JPanel {
+
+    public static final Color COLOR_PRESENTE_BG = new Color(220, 252, 231);
+    public static final Color COLOR_AUSENTE_BG = new Color(254, 226, 226);
+    public static final Color COLOR_JUSTIFICADO_BG = new Color(254, 243, 199);
+    public static final Color COLOR_NEUTRO_BG = new Color(248, 250, 252);
+
+    public static class TripulanteFila extends JPanel {
+        private final Trabajador trabajador;
+        private String estadoEnBd;
+        private String estadoElegido;
+        private final JLabel lblNombre;
+        private final JLabel lblRol;
+        private final JLabel lblEstado;
+        private final JButton btnPresente;
+        private final JButton btnAusente;
+        private final JButton btnJustificado;
+
+        public TripulanteFila(Trabajador t, String estadoGuardado) {
+            this.trabajador = t;
+            this.estadoEnBd = estadoGuardado != null ? estadoGuardado : "Presente";
+            this.estadoElegido = null;
+
+            setLayout(new BorderLayout(12, 0));
+            setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(226, 232, 240), 1, true),
+                    new EmptyBorder(12, 14, 12, 14)));
+            setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
+
+            JPanel izq = new JPanel();
+            izq.setLayout(new BoxLayout(izq, BoxLayout.Y_AXIS));
+            izq.setOpaque(false);
+            lblNombre = new JLabel(t.getNombreCompleto());
+            lblNombre.setFont(new Font("Segoe UI", Font.BOLD, 15));
+            lblNombre.setForeground(new Color(44, 62, 80));
+            lblRol = new JLabel(t.getRolCargo() != null ? t.getRolCargo() : "—");
+            lblRol.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            lblRol.setForeground(new Color(100, 116, 139));
+            lblEstado = new JLabel("Registrado: " + estadoEnBd);
+            lblEstado.setFont(new Font("Segoe UI", Font.ITALIC, 11));
+            lblEstado.setForeground(new Color(52, 73, 94));
+            izq.add(lblNombre);
+            izq.add(lblRol);
+            izq.add(Box.createRigidArea(new Dimension(0, 4)));
+            izq.add(lblEstado);
+
+            JPanel botones = new JPanel(new GridLayout(1, 3, 8, 0));
+            botones.setOpaque(false);
+            btnPresente = mkBtn("Presente", new Color(22, 163, 74));
+            btnAusente = mkBtn("Ausente", new Color(220, 38, 38));
+            btnJustificado = mkBtn("Justificado", new Color(217, 119, 6));
+            botones.add(btnPresente);
+            botones.add(btnAusente);
+            botones.add(btnJustificado);
+
+            btnPresente.addActionListener(e -> aplicarEleccion("Presente"));
+            btnAusente.addActionListener(e -> aplicarEleccion("Ausente"));
+            btnJustificado.addActionListener(e -> aplicarEleccion("Justificado"));
+
+            add(izq, BorderLayout.CENTER);
+            add(botones, BorderLayout.EAST);
+
+            pintarFondoSegunEstado(estadoEnBd);
+        }
+
+        private JButton mkBtn(String text, Color bg) {
+            JButton b = new JButton(text);
+            b.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            b.setBackground(bg);
+            b.setForeground(Color.WHITE);
+            b.setOpaque(true);
+            b.setBorderPainted(false);
+            b.setFocusPainted(false);
+            b.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            return b;
+        }
+
+        private void aplicarEleccion(String estado) {
+            estadoElegido = estado;
+            lblEstado.setText("Marcar como: " + estado + " (use «Guardar todo»)");
+            pintarFondoSegunEstado(estado);
+        }
+
+        private void pintarFondoSegunEstado(String estado) {
+            Color c = COLOR_NEUTRO_BG;
+            if ("Presente".equals(estado)) {
+                c = COLOR_PRESENTE_BG;
+            } else if ("Ausente".equals(estado)) {
+                c = COLOR_AUSENTE_BG;
+            } else if ("Justificado".equals(estado)) {
+                c = COLOR_JUSTIFICADO_BG;
+            }
+            setBackground(c);
+            for (Component comp : getComponents()) {
+                if (comp instanceof JPanel) {
+                    comp.setBackground(c);
+                    for (Component c2 : ((JPanel) comp).getComponents()) {
+                        if (c2 instanceof JPanel) {
+                            c2.setBackground(c);
+                        }
+                    }
+                }
+            }
+        }
+
+        public Trabajador getTrabajador() {
+            return trabajador;
+        }
+
+        /** Valor que debe persistirse (cambio del usuario o el ya guardado). */
+        public String getEstadoParaGuardar() {
+            return estadoElegido != null ? estadoElegido : estadoEnBd;
+        }
+
+        public boolean huboCambio() {
+            return estadoElegido != null && !estadoElegido.equals(estadoEnBd);
+        }
+
+        public void refrescarDesdeBd(String nuevoEstado) {
+            estadoEnBd = nuevoEstado;
+            estadoElegido = null;
+            lblEstado.setText("Registrado: " + estadoEnBd);
+            pintarFondoSegunEstado(estadoEnBd);
+        }
+    }
+
     private JTable table;
     private DefaultTableModel tableModel;
     private JComboBox<Planificacion> cbPlanificacion;
-    private JComboBox<Trabajador> cbTrabajador;
     private JTextField txtSearch;
-    private JButton btnAdd, btnRefresh, btnClear;
+    private JPanel tripulantesContainer;
+    private final List<TripulanteFila> filasTripulantes = new ArrayList<>();
+    private JButton btnGuardarTodo;
+    private JButton btnRefresh;
+    private JLabel errPlanificacion;
 
-    private JLabel errPlanificacion, errTrabajador;
-
-    private final Color COLOR_FONDO = new Color(248, 250, 252);
-    private final Color COLOR_ACCENTO = new Color(37, 99, 235);
-    private final Color COLOR_SECUNDARIO = new Color(71, 85, 105);
-    private final Color COLOR_TEXTO = new Color(15, 23, 42);
+    private final Color COLOR_FONDO = new Color(245, 247, 250);
+    private final Color COLOR_ACCENTO = new Color(52, 152, 219);
+    private final Color COLOR_TEXTO = new Color(44, 62, 80);
     private final Color COLOR_BORDE = new Color(226, 232, 240);
     private final Color COLOR_ERROR = new Color(220, 38, 38);
 
     public FaenaAsistenciaPanel() {
-        setLayout(new BorderLayout(30, 0));
+        setLayout(new BorderLayout(20, 16));
         setBackground(COLOR_FONDO);
-        setBorder(new EmptyBorder(40, 40, 40, 40));
+        setBorder(new EmptyBorder(32, 32, 32, 32));
 
         initHeader();
-        initCenterTable();
-        initSidebar();
+        initCentroTripulantes();
+        initTablaSur();
     }
 
     private void initHeader() {
-        JPanel topPanel = new JPanel(new BorderLayout(0, 25));
-        topPanel.setOpaque(false);
+        JPanel top = new JPanel(new BorderLayout(0, 12));
+        top.setOpaque(false);
 
-        JLabel lblTitle = new JLabel("Historial de Asistencia");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 32));
+        JLabel lblTitle = new JLabel("Control de asistencia");
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
         lblTitle.setForeground(COLOR_TEXTO);
-
-        JLabel lblSub = new JLabel("Consulte el personal asignado a las faenas activas y pasadas.");
+        JLabel lblSub = new JLabel("Elija el viaje activo, marque a cada tripulante y pulse «Guardar todo».");
         lblSub.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        lblSub.setForeground(COLOR_SECUNDARIO);
+        lblSub.setForeground(new Color(100, 116, 139));
+        JPanel texts = new JPanel();
+        texts.setLayout(new BoxLayout(texts, BoxLayout.Y_AXIS));
+        texts.setOpaque(false);
+        texts.add(lblTitle);
+        texts.add(lblSub);
 
-        JPanel titleGroup = new JPanel();
-        titleGroup.setLayout(new BoxLayout(titleGroup, BoxLayout.Y_AXIS));
-        titleGroup.setOpaque(false);
-        titleGroup.add(lblTitle);
-        titleGroup.add(lblSub);
+        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        row.setOpaque(false);
+        JLabel lViaje = new JLabel("Viaje:");
+        lViaje.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        cbPlanificacion = new JComboBox<>();
+        cbPlanificacion.setPreferredSize(new Dimension(420, 38));
+        btnGuardarTodo = new JButton("Guardar todo");
+        btnGuardarTodo.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnGuardarTodo.setBackground(new Color(39, 174, 96));
+        btnGuardarTodo.setForeground(Color.WHITE);
+        btnGuardarTodo.setOpaque(true);
+        btnGuardarTodo.setBorderPainted(false);
+        btnRefresh = new JButton("Actualizar");
+        btnRefresh.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnRefresh.setBackground(COLOR_ACCENTO);
+        btnRefresh.setForeground(Color.WHITE);
+        btnRefresh.setOpaque(true);
+        btnRefresh.setBorderPainted(false);
+        row.add(lViaje);
+        row.add(cbPlanificacion);
+        row.add(btnGuardarTodo);
+        row.add(btnRefresh);
 
-        JPanel searchBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 15));
-        searchBar.setOpaque(false);
+        errPlanificacion = new JLabel(" ");
+        errPlanificacion.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        errPlanificacion.setForeground(COLOR_ERROR);
 
-        txtSearch = new JTextField(25);
-        txtSearch.setPreferredSize(new Dimension(350, 40));
-        txtSearch.putClientProperty("JTextField.placeholderText",
-                "Filtrar por código de viaje o nombre de trabajador...");
+        JPanel searchRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        searchRow.setOpaque(false);
+        txtSearch = new JTextField(28);
+        txtSearch.setPreferredSize(new Dimension(320, 36));
+        txtSearch.putClientProperty("JTextField.placeholderText", "Filtrar historial por viaje o nombre...");
+        searchRow.add(new JLabel("Historial:"));
+        searchRow.add(txtSearch);
 
-        btnRefresh = createStyledButton("↺ Sincronizar", COLOR_ACCENTO);
-        btnRefresh.setPreferredSize(new Dimension(160, 40));
+        JPanel northStack = new JPanel();
+        northStack.setLayout(new BoxLayout(northStack, BoxLayout.Y_AXIS));
+        northStack.setOpaque(false);
+        northStack.add(texts);
+        northStack.add(Box.createRigidArea(new Dimension(0, 16)));
+        northStack.add(row);
+        northStack.add(errPlanificacion);
+        northStack.add(Box.createRigidArea(new Dimension(0, 8)));
+        northStack.add(searchRow);
 
-        searchBar.add(txtSearch);
-        searchBar.add(Box.createRigidArea(new Dimension(15, 0)));
-        searchBar.add(btnRefresh);
-
-        topPanel.add(titleGroup, BorderLayout.NORTH);
-        topPanel.add(searchBar, BorderLayout.SOUTH);
-        add(topPanel, BorderLayout.NORTH);
+        top.add(northStack, BorderLayout.NORTH);
+        add(top, BorderLayout.NORTH);
     }
 
-    private void initCenterTable() {
-        String[] columns = { "ID", "Código Viaje", "Tripulante", "Fecha Registro" };
+    private void initCentroTripulantes() {
+        tripulantesContainer = new JPanel();
+        tripulantesContainer.setLayout(new BoxLayout(tripulantesContainer, BoxLayout.Y_AXIS));
+        tripulantesContainer.setOpaque(false);
+
+        JScrollPane scroll = new JScrollPane(tripulantesContainer);
+        scroll.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder(
+                        BorderFactory.createLineBorder(COLOR_BORDE),
+                        "Tripulantes del viaje seleccionado",
+                        0, 0,
+                        new Font("Segoe UI", Font.BOLD, 13),
+                        COLOR_TEXTO),
+                new EmptyBorder(8, 8, 8, 8)));
+        scroll.getViewport().setBackground(Color.WHITE);
+        add(scroll, BorderLayout.CENTER);
+    }
+
+    private void initTablaSur() {
+        String[] columns = { "ID", "Código Viaje", "Tripulante", "Estado", "Fecha Registro" };
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int r, int c) {
                 return false;
             }
         };
-
         table = new JTable(tableModel);
-        styleTable(table);
-
-        // OCULTAR ID
+        table.setRowHeight(40);
+        table.setSelectionBackground(new Color(232, 244, 253));
+        table.setSelectionForeground(COLOR_ACCENTO);
         table.getColumnModel().getColumn(0).setMinWidth(0);
         table.getColumnModel().getColumn(0).setMaxWidth(0);
-
-        JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(BorderFactory.createLineBorder(COLOR_BORDE));
-        scrollPane.getViewport().setBackground(Color.WHITE);
-        add(scrollPane, BorderLayout.CENTER);
-    }
-
-    private void initSidebar() {
-        JPanel sidebar = new JPanel(new GridBagLayout());
-        sidebar.setPreferredSize(new Dimension(380, 0));
-        sidebar.setBackground(Color.WHITE);
-        sidebar.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(COLOR_BORDE),
-                new EmptyBorder(30, 30, 30, 30)));
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.NORTH; // CLAVE: Empuja todo hacia arriba
-        gbc.weightx = 1.0;
-        gbc.gridx = 0;
-        int y = 0;
-
-        JLabel lblForm = new JLabel("Asignación Manual");
-        lblForm.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        lblForm.setForeground(COLOR_ACCENTO);
-        gbc.gridy = y++;
-        gbc.insets = new Insets(0, 0, 25, 0);
-        sidebar.add(lblForm, gbc);
-
-        cbPlanificacion = new JComboBox<>();
-        cbTrabajador = new JComboBox<>();
-        styleComboBox(cbPlanificacion);
-        styleComboBox(cbTrabajador);
-
-        // --- VIAJE ---
-        addLabeledField("VIAJE DESTINO", cbPlanificacion, sidebar, gbc, y);
-        y += 2;
-        errPlanificacion = addErrorLabel(sidebar, gbc, y++);
-
-        // --- TRABAJADOR ---
-        addLabeledField("TRABAJADOR A VINCULAR", cbTrabajador, sidebar, gbc, y);
-        y += 2;
-        errTrabajador = addErrorLabel(sidebar, gbc, y++);
-
-        // Info de advertencia
-        JLabel lblInfo = new JLabel(
-                "<html><body style='width: 250px;'>Solo use este panel para correcciones manuales. La tripulación estándar se asigna en <b>Planificación</b>.</body></html>");
-        lblInfo.setFont(new Font("Segoe UI", Font.ITALIC, 11));
-        lblInfo.setForeground(COLOR_SECUNDARIO);
-        gbc.gridy = y++;
-        gbc.insets = new Insets(10, 0, 25, 0);
-        sidebar.add(lblInfo, gbc);
-
-        // Botones
-        JPanel btnActions = new JPanel(new GridLayout(1, 2, 12, 0));
-        btnActions.setOpaque(false);
-        btnAdd = createStyledButton("Asignar", COLOR_ACCENTO);
-        btnClear = createStyledButton("Limpiar", COLOR_SECUNDARIO);
-        btnActions.add(btnAdd);
-        btnActions.add(btnClear);
-
-        gbc.gridy = y++;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        sidebar.add(btnActions, gbc);
-
-        // El Glue: Absorbe el espacio sobrante al final
-        gbc.gridy = y++;
-        gbc.weighty = 1.0;
-        sidebar.add(Box.createVerticalGlue(), gbc);
-
-        add(sidebar, BorderLayout.EAST);
-    }
-
-    private void addLabeledField(String labelText, JComponent field, JPanel panel, GridBagConstraints gbc, int y) {
-        JLabel label = new JLabel(labelText);
-        label.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        label.setForeground(new Color(148, 163, 184));
-        gbc.gridy = y;
-        gbc.insets = new Insets(8, 0, 4, 0);
-        panel.add(label, gbc);
-
-        gbc.gridy = y + 1;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        panel.add(field, gbc);
-    }
-
-    private JLabel addErrorLabel(JPanel panel, GridBagConstraints gbc, int y) {
-        JLabel l = new JLabel(" ");
-        l.setFont(new Font("Segoe UI", Font.PLAIN, 10));
-        l.setForeground(COLOR_ERROR);
-        gbc.gridy = y;
-        gbc.insets = new Insets(2, 0, 15, 0); // Espacio controlado después del error
-        panel.add(l, gbc);
-        return l;
-    }
-
-    private void styleComboBox(JComboBox<?> cb) {
-        cb.setPreferredSize(new Dimension(0, 40));
-        cb.setBackground(Color.WHITE);
-        cb.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-    }
-
-    private JButton createStyledButton(String text, Color bg) {
-        JButton btn = new JButton(text);
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        btn.setBackground(bg);
-        btn.setForeground(Color.WHITE);
-        btn.setOpaque(true);
-        btn.setBorderPainted(false);
-        btn.setFocusPainted(false);
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setPreferredSize(new Dimension(0, 40));
-        return btn;
-    }
-
-    private void styleTable(JTable table) {
-        table.setRowHeight(45);
-        table.setSelectionBackground(new Color(239, 246, 255));
-        table.setSelectionForeground(COLOR_ACCENTO);
-        table.setShowVerticalLines(false);
-        table.setGridColor(new Color(241, 245, 249));
-        table.getTableHeader().setBackground(Color.WHITE);
-        table.getTableHeader().setPreferredSize(new Dimension(0, 45));
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+
+        JScrollPane sp = new JScrollPane(table);
+        sp.setPreferredSize(new Dimension(0, 180));
+        sp.setBorder(BorderFactory.createLineBorder(COLOR_BORDE));
+        add(sp, BorderLayout.SOUTH);
     }
 
-    // --- GETTERS ---
+    public void limpiarFilasTripulantes() {
+        tripulantesContainer.removeAll();
+        filasTripulantes.clear();
+        tripulantesContainer.revalidate();
+        tripulantesContainer.repaint();
+    }
+
+    public void agregarFilaTripulante(Trabajador t, String estadoEnBd) {
+        TripulanteFila fila = new TripulanteFila(t, estadoEnBd);
+        filasTripulantes.add(fila);
+        tripulantesContainer.add(fila);
+        tripulantesContainer.add(Box.createRigidArea(new Dimension(0, 10)));
+    }
+
+    public void finalizarFilas() {
+        tripulantesContainer.revalidate();
+        tripulantesContainer.repaint();
+    }
+
+    public List<TripulanteFila> getFilasTripulantes() {
+        return Collections.unmodifiableList(filasTripulantes);
+    }
+
     public JTable getTable() {
         return table;
     }
@@ -230,31 +306,19 @@ public class FaenaAsistenciaPanel extends JPanel {
         return cbPlanificacion;
     }
 
-    public JComboBox<Trabajador> getCbTrabajador() {
-        return cbTrabajador;
-    }
-
     public JTextField getTxtSearch() {
         return txtSearch;
     }
 
-    public JButton getBtnAdd() {
-        return btnAdd;
+    public JButton getBtnGuardarTodo() {
+        return btnGuardarTodo;
     }
 
     public JButton getBtnRefresh() {
         return btnRefresh;
     }
 
-    public JButton getBtnClear() {
-        return btnClear;
-    }
-
     public JLabel getErrPlanificacion() {
         return errPlanificacion;
-    }
-
-    public JLabel getErrTrabajador() {
-        return errTrabajador;
     }
 }

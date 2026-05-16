@@ -34,7 +34,7 @@ public class MainView extends JFrame {
     private final Color COLOR_TEXT_OFF = new Color(148, 163, 184);
 
     public MainView() {
-        setTitle("FishGold 🚢 | Gestión Pesquera Integral");
+        setTitle("FishGold — Gestión pesquera");
         setSize(1400, 900);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(1200, 800));
@@ -65,12 +65,12 @@ public class MainView extends JFrame {
         menuPanel.setBorder(new EmptyBorder(20, 15, 0, 15));
 
         // Instanciación de botones con íconos
-        btnDashboard = createMenuButton("Panel de Control", "🏠");
-        btnTrabajadores = createMenuButton("Personal", "👥");
-        btnPlanificacion = createMenuButton("Planificación", "📅");
-        btnAsistencia = createMenuButton("Faena", "📝");
-        btnLiquidacion = createMenuButton("Liquidación", "💰");
-        btnConfiguracion = createMenuButton("Configuración", "⚙"); // Nuevo Botón
+        btnDashboard = createMenuButton("Panel de Control");
+        btnTrabajadores = createMenuButton("Personal");
+        btnPlanificacion = createMenuButton("Planificación");
+        btnAsistencia = createMenuButton("Faena / Asistencia");
+        btnLiquidacion = createMenuButton("Liquidación");
+        btnConfiguracion = createMenuButton("Configuración");
 
         // Adición al panel con espaciado rígido
         menuPanel.add(btnDashboard);
@@ -110,7 +110,7 @@ public class MainView extends JFrame {
         // --- CONTENT AREA ---
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
-        contentPanel.setBackground(new Color(248, 250, 252));
+        contentPanel.setBackground(new Color(245, 247, 250));
 
         // Inicialización de paneles corregidos
         dashboardPanel = new DashboardPanel();
@@ -133,8 +133,8 @@ public class MainView extends JFrame {
         setActiveButton(btnDashboard);
     }
 
-    private JButton createMenuButton(String text, String icon) {
-        JButton btn = new JButton("   " + icon + "    " + text);
+    private JButton createMenuButton(String text) {
+        JButton btn = new JButton("  " + text);
         btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
         btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btn.setForeground(COLOR_TEXT_OFF);

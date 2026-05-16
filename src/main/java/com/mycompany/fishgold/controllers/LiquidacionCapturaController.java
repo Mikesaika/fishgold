@@ -3,6 +3,7 @@ package com.mycompany.fishgold.controllers;
 import com.mycompany.fishgold.models.*;
 import com.mycompany.fishgold.views.LiquidacionCapturaPanel;
 import com.mycompany.fishgold.util.Validator;
+import com.mycompany.fishgold.util.LiquidacionCalculo;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -13,7 +14,7 @@ public class LiquidacionCapturaController {
     private final LiquidacionCapturaPanel view;
     private final LiquidacionCapturaDAO dao;
     private final PlanificacionDAO planDAO;
-    private final ConfiguracionDAO confDAO; // Requerido para el cálculo en tiempo real
+    private final ConfiguracionDAO confDAO;
 
     public LiquidacionCapturaController(LiquidacionCapturaPanel view, LiquidacionCapturaDAO dao,
             PlanificacionDAO planDAO) {
@@ -26,25 +27,12 @@ public class LiquidacionCapturaController {
 
     private void init() {
         view.getBtnAdd().addActionListener(e -> registrarLiquidacion());
-        view.getBtnUpdate().addActionListener(e -> actualizar());
-        view.getBtnDelete().addActionListener(e -> eliminar());
-        view.getBtnClear().addActionListener(e -> limpiarFormulario());
+        view.getBtnEliminar().addActionListener(e -> eliminarLiquidacionSeleccionada());
 
-        // BUSQUEDA EN TIEMPO REAL
         view.getTxtSearch().getDocument().addDocumentListener(new SimpleDocumentListener(this::buscar));
-
-        // LÓGICA DE EXPERTO: Cálculo en tiempo real al escribir el peso
         view.getTxtPesoPescado().getDocument()
                 .addDocumentListener(new SimpleDocumentListener(this::calcularPrevisualizacion));
-
-        // Al cambiar de viaje en el combo, también recalculamos (por si cambia la meta)
         view.getCbPlanificacion().addActionListener(e -> calcularPrevisualizacion());
-
-        // Sincronización Tabla -> Formulario
-        view.getTable().getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting())
-                seleccionarFila();
-        });
 
         recargarVista();
     }
@@ -52,27 +40,20 @@ public class LiquidacionCapturaController {
     private void calcularPrevisualizacion() {
         try {
             Planificacion p = (Planificacion) view.getCbPlanificacion().getSelectedItem();
-            String pesoStr = view.getTxtPesoPescado().getText().trim();
-
-            if (p == null || pesoStr.isEmpty() || !Validator.isDecimal(view.getTxtPesoPescado())) {
+            if (p == null) {
                 view.getLblPreviewCalculo().setText("$ 0.00");
                 return;
             }
-
+            String pesoStr = view.getTxtPesoPescado().getText().trim();
+            if (pesoStr.isEmpty() || !Validator.isDecimal(view.getTxtPesoPescado())) {
+                view.getLblPreviewCalculo().setText("$ 0.00");
+                return;
+            }
             double pesoReal = Double.parseDouble(pesoStr);
             double meta = p.getMetaPesoKg();
             double precioBase = confDAO.getActual().getPagoKiloBase();
-            double monto;
-
-            if (pesoReal > meta) {
-                double exceso = pesoReal - meta;
-                monto = (meta * precioBase) + (exceso * (precioBase * 2));
-            } else {
-                monto = pesoReal * precioBase;
-            }
-
+            double monto = LiquidacionCalculo.calcularMonto(pesoReal, meta, precioBase);
             view.getLblPreviewCalculo().setText("$ " + String.format("%.2f", monto));
-
         } catch (Exception e) {
             view.getLblPreviewCalculo().setText("$ 0.00");
         }
@@ -84,17 +65,17 @@ public class LiquidacionCapturaController {
 
         Planificacion p = (Planificacion) view.getCbPlanificacion().getSelectedItem();
         if (p == null) {
-            JOptionPane.showMessageDialog(view, "⚠ Seleccione un viaje.");
+            JOptionPane.showMessageDialog(view, "Seleccione un viaje.");
             return;
         }
 
         if (!Validator.isDecimal(view.getTxtPesoPescado())) {
-            view.getErrPeso().setText("⚠ Peso inválido");
+            view.getErrPeso().setText("Peso inválido");
             return;
         }
 
         if (!Validator.isNotBlank(view.getTxtCapitan())) {
-            view.getErrCapitan().setText("⚠ Nombre requerido");
+            view.getErrCapitan().setText("Nombre requerido");
             return;
         }
 
@@ -105,12 +86,35 @@ public class LiquidacionCapturaController {
         lc.setObservaciones(view.getTxtObservaciones().getText());
 
         if (dao.create(lc)) {
-            JOptionPane.showMessageDialog(view, "✅ Liquidación procesada y viaje finalizado.");
+            JOptionPane.showMessageDialog(view, "Liquidación registrada y viaje finalizado.");
             recargarVista();
+        } else {
+            JOptionPane.showMessageDialog(view, "No se pudo registrar. ¿El viaje ya tiene liquidación?",
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    // --- MÉTODOS DE SOPORTE ---
+    private void eliminarLiquidacionSeleccionada() {
+        int fila = view.getTable().getSelectedRow();
+        if (fila < 0) {
+            JOptionPane.showMessageDialog(view, "Seleccione una fila en la tabla de liquidaciones.");
+            return;
+        }
+        int id = (int) view.getTable().getValueAt(fila, 0);
+        int conf = JOptionPane.showConfirmDialog(view,
+                "Se eliminará esta liquidación y el viaje volverá a estado Pendiente para poder registrar una nueva captura.\n¿Continuar?",
+                "Confirmar eliminación", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (conf != JOptionPane.YES_OPTION) {
+            return;
+        }
+        if (dao.deleteById(id)) {
+            JOptionPane.showMessageDialog(view, "Liquidación eliminada. Puede crear una nueva desde este módulo.");
+            recargarVista();
+        } else {
+            JOptionPane.showMessageDialog(view, "No se pudo eliminar la liquidación.", "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
 
     public void recargarVista() {
         cargarCombos();
@@ -121,7 +125,9 @@ public class LiquidacionCapturaController {
     private void cargarCombos() {
         view.getCbPlanificacion().removeAllItems();
         planDAO.readAll().stream()
-                .filter(p -> p.getEstado().equalsIgnoreCase("En Curso") || p.getEstado().equalsIgnoreCase("Pendiente"))
+                .filter(p -> p.isActivo())
+                .filter(x -> "En Curso".equalsIgnoreCase(x.getEstado()) || "Pendiente".equalsIgnoreCase(x.getEstado()))
+                .filter(p -> planDAO.countLiquidaciones(p.getId()) == 0)
                 .forEach(view.getCbPlanificacion()::addItem);
     }
 
@@ -141,39 +147,21 @@ public class LiquidacionCapturaController {
         cargarTabla(dao.search(view.getTxtSearch().getText().trim()));
     }
 
-    private void seleccionarFila() {
-        int fila = view.getTable().getSelectedRow();
-        if (fila != -1) {
-            view.getTxtPesoPescado().setText(view.getTable().getValueAt(fila, 2).toString());
-            view.getTxtCapitan().setText(view.getTable().getValueAt(fila, 4).toString());
-            view.getTxtObservaciones().setText(view.getTable().getValueAt(fila, 6).toString());
-        }
-    }
-
     private void limpiarFormulario() {
         view.getTxtPesoPescado().setText("");
         view.getTxtCapitan().setText("");
         view.getTxtObservaciones().setText("");
         view.getLblPreviewCalculo().setText("$ 0.00");
-        if (view.getCbPlanificacion().getItemCount() > 0)
+        if (view.getCbPlanificacion().getItemCount() > 0) {
             view.getCbPlanificacion().setSelectedIndex(0);
+        }
         view.getTable().clearSelection();
     }
 
-    private void actualizar() {
-        /* Lógica de actualización */ }
-
-    private void eliminar() {
-        /* Lógica de eliminación */ }
-
-    private void generarReporte() {
-        /* Lógica de PDF */ }
-
-    // Clase interna para reducir código repetitivo de DocumentListener
     private class SimpleDocumentListener implements DocumentListener {
         private final Runnable action;
 
-        public SimpleDocumentListener(Runnable action) {
+        SimpleDocumentListener(Runnable action) {
             this.action = action;
         }
 

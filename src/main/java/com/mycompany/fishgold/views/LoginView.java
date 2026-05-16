@@ -33,8 +33,8 @@ public class LoginView extends JFrame {
         mainPanel.setBorder(new EmptyBorder(40, 50, 40, 50));
 
         // --- ICONO ---
-        JLabel lblIcon = new JLabel("🚢");
-        lblIcon.setFont(new Font("Segoe UI Symbol", Font.PLAIN, 70));
+        JLabel lblIcon = new JLabel("FishGold");
+        lblIcon.setFont(new Font("Segoe UI", Font.BOLD, 36));
         lblIcon.setAlignmentX(Component.CENTER_ALIGNMENT);
         lblIcon.setForeground(COLOR_PRIMARIO);
 
