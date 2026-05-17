@@ -28,6 +28,7 @@ public class FaenaAsistenciaController {
         view.getBtnGuardarTodo().addActionListener(e -> guardarTodo());
         view.getBtnRefresh().addActionListener(e -> recargarVista());
         view.getCbPlanificacion().addActionListener(e -> cargarTripulacionDelViaje());
+        view.getBtnEliminar().addActionListener(e -> eliminarAsistencia());
 
         view.getTxtSearch().getDocument().addDocumentListener(new DocumentListener() {
             @Override
@@ -158,6 +159,51 @@ private void guardarTodo() {
                     fa.getEstadoAsistencia(),
                     fa.getFechaAsistencia()
             });
+        }
+    }
+
+    private void eliminarAsistencia() {
+        int fila = view.getTable().getSelectedRow();
+        if (fila == -1) {
+            JOptionPane.showMessageDialog(view,
+                    "Seleccione un registro del historial para eliminar.",
+                    "Sin selección", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int id = (int) view.getTable().getValueAt(fila, 0);
+        String codigoViaje = view.getTable().getValueAt(fila, 1).toString();
+        String nombreTripulante = view.getTable().getValueAt(fila, 2).toString();
+
+        // Verificar si el viaje ya tiene liquidación (no se puede tocar)
+        FaenaAsistencia registroActual = null;
+        for (FaenaAsistencia fa : dao.readAll()) {
+            if (fa.getId() == id) {
+                registroActual = fa;
+                break;
+            }
+        }
+        if (registroActual != null && planDAO.countLiquidaciones(registroActual.getPlanificacionId()) > 0) {
+            JOptionPane.showMessageDialog(view,
+                    "No se puede eliminar: el viaje '" + codigoViaje + "' ya tiene liquidación registrada.",
+                    "Operación no permitida", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(view,
+                "¿Eliminar la asistencia de '" + nombreTripulante + "' en el viaje '" + codigoViaje + "'?\n"
+                        + "Esta acción no se puede deshacer.",
+                "Confirmar eliminación", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            if (dao.delete(id)) {
+                JOptionPane.showMessageDialog(view, "Registro de asistencia eliminado correctamente.");
+                cargarTabla(dao.readAll());
+                cargarTripulacionDelViaje();
+            } else {
+                JOptionPane.showMessageDialog(view, "Error al eliminar el registro.",
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 

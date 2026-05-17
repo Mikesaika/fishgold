@@ -109,6 +109,18 @@ public class FaenaAsistenciaDAO {
         return lista;
     }
 
+    public boolean delete(int id) {
+        String sql = "DELETE FROM faena_asistencia WHERE id = ?";
+        try (Connection con = DatabaseConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error al eliminar asistencia: " + e.getMessage());
+            return false;
+        }
+    }
+
     private FaenaAsistencia mapResultSet(ResultSet rs) throws SQLException {
         String estado;
         try {

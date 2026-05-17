@@ -148,6 +148,7 @@ public class FaenaAsistenciaPanel extends JPanel {
     private final List<TripulanteFila> filasTripulantes = new ArrayList<>();
     private JButton btnGuardarTodo;
     private JButton btnRefresh;
+    private JButton btnEliminar;
     private JLabel errPlanificacion;
 
     private final Color COLOR_FONDO = new Color(245, 247, 250);
@@ -200,10 +201,18 @@ public class FaenaAsistenciaPanel extends JPanel {
         btnRefresh.setForeground(Color.WHITE);
         btnRefresh.setOpaque(true);
         btnRefresh.setBorderPainted(false);
+        btnEliminar = new JButton("Eliminar registro");
+        btnEliminar.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnEliminar.setBackground(COLOR_ERROR);
+        btnEliminar.setForeground(Color.WHITE);
+        btnEliminar.setOpaque(true);
+        btnEliminar.setBorderPainted(false);
+        btnEliminar.setCursor(new Cursor(Cursor.HAND_CURSOR));
         row.add(lViaje);
         row.add(cbPlanificacion);
         row.add(btnGuardarTodo);
         row.add(btnRefresh);
+        row.add(btnEliminar);
 
         errPlanificacion = new JLabel(" ");
         errPlanificacion.setFont(new Font("Segoe UI", Font.PLAIN, 11));
@@ -316,6 +325,10 @@ public class FaenaAsistenciaPanel extends JPanel {
 
     public JButton getBtnRefresh() {
         return btnRefresh;
+    }
+
+    public JButton getBtnEliminar() {
+        return btnEliminar;
     }
 
     public JLabel getErrPlanificacion() {
