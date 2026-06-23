@@ -2,6 +2,7 @@ package com.mycompany.fishgold.util;
 
 import java.util.regex.Pattern;
 import javax.swing.JTextField;
+import javax.swing.JComponent;
 import javax.swing.BorderFactory;
 import java.awt.Color;
 import javax.swing.border.Border;
@@ -64,9 +65,9 @@ public class Validator {
     }
 
     /**
-     * Método privado para aplicar el diseño UI dependiendo del resultado.
+     * Método público para aplicar el diseño UI dependiendo del resultado.
      */
-    private static void applyStyle(JTextField field, boolean isValid) {
+    public static void applyStyle(JComponent field, boolean isValid) {
         if (isValid) {
             field.setBorder(BORDER_NORMAL);
         } else {

@@ -1,0 +1,91 @@
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\Fishgold.java:9:	UseUtilityClass:	All methods are static. Consider adding a private no-args constructor to prevent instantiation.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\controllers\DashboardController.java:3:	UnnecessaryImport:	Unused import 'com.mycompany.fishgold.models.*'
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\controllers\DashboardController.java:37:	ClassWithOnlyPrivateConstructorsShouldBeFinal:	This class has only private constructors and may be final
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\controllers\FaenaAsistenciaController.java:3:	UnnecessaryImport:	Unused import 'com.mycompany.fishgold.models.*'
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\controllers\LiquidacionCapturaController.java:3:	UnnecessaryImport:	Unused import 'com.mycompany.fishgold.models.*'
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\controllers\MainController.java:55:	UnusedLocalVariable:	Avoid unused local variables such as 'configuracionController'.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\controllers\PlanificacionController.java:3:	UnnecessaryImport:	Unused import 'com.mycompany.fishgold.models.*'
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\controllers\TrabajadorController.java:83:	ControlStatementBraces:	This statement should have braces
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\controllers\TrabajadorController.java:104:	ControlStatementBraces:	This statement should have braces
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\controllers\TrabajadorController.java:183:	ControlStatementBraces:	This statement should have braces
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\controllers\TrabajadorController.java:187:	ControlStatementBraces:	This statement should have braces
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\controllers\TrabajadorController.java:191:	ControlStatementBraces:	This statement should have braces
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\controllers\TrabajadorController.java:194:	ControlStatementBraces:	This statement should have braces
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\models\Configuracion.java:7:	UncommentedEmptyConstructor:	Document empty constructor
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\models\ConfiguracionDAO.java:70:	EmptyCatchBlock:	Avoid empty catch blocks
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\models\DashboardDAO.java:34:	ControlStatementBraces:	This statement should have braces
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\models\FaenaAsistencia.java:16:	UncommentedEmptyConstructor:	Document empty constructor
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\models\LiquidacionCaptura.java:17:	UncommentedEmptyConstructor:	Document empty constructor
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\models\Planificacion.java:16:	UncommentedEmptyConstructor:	Document empty constructor
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\models\PlanificacionDAO.java:50:	ControlStatementBraces:	This statement should have braces
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\models\PlanificacionDAO.java:58:	ControlStatementBraces:	This statement should have braces
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\models\PlanificacionDAO.java:116:	ControlStatementBraces:	This statement should have braces
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\models\PlanificacionDAO.java:125:	ControlStatementBraces:	This statement should have braces
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\models\Trabajador.java:15:	UncommentedEmptyConstructor:	Document empty constructor
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\models\TrabajadorDAO.java:184:	ControlStatementBraces:	This statement should have braces
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\models\Usuario.java:10:	UncommentedEmptyConstructor:	Document empty constructor
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\models\Usuario.java:47:	ControlStatementBraces:	This statement should have braces
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\models\Usuario.java:49:	ControlStatementBraces:	This statement should have braces
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\util\DatabaseConnection.java:7:	UseUtilityClass:	All methods are static. Consider adding a private no-args constructor to prevent instantiation.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\util\LiquidacionCalculo.java:14:	UselessParentheses:	Useless parentheses around `precioPorKilo * 2`.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\util\Validator.java:9:	UseUtilityClass:	All methods are static. Consider adding a private no-args constructor to prevent instantiation.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\util\Validator.java:11:	UnusedPrivateField:	Avoid unused private fields such as 'SOLO_NUMEROS'.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\ConfiguracionPanel.java:39:	UnnecessaryFullyQualifiedName:	Unnecessary qualifier 'Component': 'LEFT_ALIGNMENT' is already in scope because it is inherited by an enclosing type
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\ConfiguracionPanel.java:44:	UnnecessaryFullyQualifiedName:	Unnecessary qualifier 'Component': 'LEFT_ALIGNMENT' is already in scope because it is inherited by an enclosing type
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\ConfiguracionPanel.java:53:	UnnecessaryFullyQualifiedName:	Unnecessary qualifier 'Component': 'LEFT_ALIGNMENT' is already in scope because it is inherited by an enclosing type
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\DashboardPanel.java:128:	UnnecessaryFullyQualifiedName:	Unnecessary qualifier 'Component': 'LEFT_ALIGNMENT' is already in scope because it is inherited by an enclosing type
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\DashboardPanel.java:136:	UnnecessaryFullyQualifiedName:	Unnecessary qualifier 'Component': 'LEFT_ALIGNMENT' is already in scope because it is inherited by an enclosing type
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\DashboardPanel.java:151:	UseLocaleWithCaseConversions:	When doing a String.toLowerCase()/toUpperCase() call, use a Locale
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LiquidacionCapturaPanel.java:13:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LiquidacionCapturaPanel.java:15:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LiquidacionCapturaPanel.java:17:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LiquidacionCapturaPanel.java:93:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LiquidacionCapturaPanel.java:100:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LiquidacionCapturaPanel.java:110:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LiquidacionCapturaPanel.java:113:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LiquidacionCapturaPanel.java:114:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LiquidacionCapturaPanel.java:135:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LiquidacionCapturaPanel.java:139:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LiquidacionCapturaPanel.java:140:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LiquidacionCapturaPanel.java:142:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LiquidacionCapturaPanel.java:143:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LiquidacionCapturaPanel.java:155:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LiquidacionCapturaPanel.java:159:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LoginView.java:13:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LoginView.java:23:	UnnecessaryFullyQualifiedName:	Unnecessary qualifier 'JFrame': 'WindowConstants::EXIT_ON_CLOSE' is already in scope because it is inherited by an enclosing type
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LoginView.java:38:	UnnecessaryFullyQualifiedName:	Unnecessary qualifier 'Component': 'CENTER_ALIGNMENT' is already in scope because it is inherited by an enclosing type
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LoginView.java:45:	UnnecessaryFullyQualifiedName:	Unnecessary qualifier 'Component': 'CENTER_ALIGNMENT' is already in scope because it is inherited by an enclosing type
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LoginView.java:50:	UnnecessaryFullyQualifiedName:	Unnecessary qualifier 'Component': 'CENTER_ALIGNMENT' is already in scope because it is inherited by an enclosing type
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\LoginView.java:109:	UnnecessaryFullyQualifiedName:	Unnecessary qualifier 'Component': 'CENTER_ALIGNMENT' is already in scope because it is inherited by an enclosing type
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\MainView.java:14:	SingularField:	Perhaps 'sidebarPanel' could be replaced by a local variable.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\MainView.java:14:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\MainView.java:26:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\MainView.java:39:	UnnecessaryFullyQualifiedName:	Unnecessary qualifier 'JFrame': 'WindowConstants::EXIT_ON_CLOSE' is already in scope because it is inherited by an enclosing type
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\MainView.java:150:	MissingOverride:	The method 'mouseEntered(MouseEvent)' is missing an @Override annotation.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\MainView.java:151:	CompareObjectsWithEquals:	Use equals() to compare object references.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\MainView.java:157:	MissingOverride:	The method 'mouseExited(MouseEvent)' is missing an @Override annotation.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\MainView.java:158:	CompareObjectsWithEquals:	Use equals() to compare object references.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\PlanificacionPanel.java:17:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\PlanificacionPanel.java:20:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\PlanificacionPanel.java:25:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\PlanificacionPanel.java:100:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\PlanificacionPanel.java:113:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\PlanificacionPanel.java:114:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\PlanificacionPanel.java:116:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\PlanificacionPanel.java:117:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\PlanificacionPanel.java:119:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\PlanificacionPanel.java:122:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\PlanificacionPanel.java:125:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\PlanificacionPanel.java:126:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\PlanificacionPanel.java:132:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\PlanificacionPanel.java:141:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\PlanificacionPanel.java:155:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\PlanificacionPanel.java:163:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\PlanificacionPanel.java:165:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\PlanificacionPanel.java:181:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\PlanificacionPanel.java:186:	AssignmentInOperand:	Avoid assignment to y in operand
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\PlanificacionPanel.java:249:	UnnecessaryFullyQualifiedName:	Unnecessary qualifier 'Component': 'LEFT_ALIGNMENT' is already in scope because it is inherited by an enclosing type
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\TrabajadorPanel.java:11:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\TrabajadorPanel.java:12:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\TrabajadorPanel.java:13:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+C:\Users\migue\Downloads\verificacion\fishgold\src\main\java\com\mycompany\fishgold\views\TrabajadorPanel.java:16:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.

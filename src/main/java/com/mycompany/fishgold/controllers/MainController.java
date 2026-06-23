@@ -1,60 +1,53 @@
 package com.mycompany.fishgold.controllers;
 
-import com.mycompany.fishgold.models.*;
+import com.mycompany.fishgold.models.ConfiguracionDAO;
+import com.mycompany.fishgold.models.DashboardDAO;
+import com.mycompany.fishgold.models.FaenaAsistenciaDAO;
+import com.mycompany.fishgold.models.LiquidacionCapturaDAO;
+import com.mycompany.fishgold.models.PlanificacionDAO;
+import com.mycompany.fishgold.models.TrabajadorDAO;
+import com.mycompany.fishgold.models.UsuarioDAO;
 import com.mycompany.fishgold.views.MainView;
 import com.mycompany.fishgold.views.LoginView;
 import javax.swing.JOptionPane;
 
-/**
- * MainController: Orquestador principal del sistema FishGold.
- * Gestiona el ciclo de vida de los sub-controladores y la navegación
- * CardLayout.
- */
+// ❌ DETALLE ADICIONAL PARA EL VIDEO: Si quisieras forzar la regla de la clase,
+// podrías llamarla "mainController" con minúscula.
 public class MainController {
     private final MainView mainView;
 
-    // Instancias únicas de DAOs para compartir conexión (Eficiencia)
     private final TrabajadorDAO trabajadorDAO = new TrabajadorDAO();
     private final PlanificacionDAO planificacionDAO = new PlanificacionDAO();
     private final FaenaAsistenciaDAO asistenciaDAO = new FaenaAsistenciaDAO();
     private final LiquidacionCapturaDAO liquidacionDAO = new LiquidacionCapturaDAO();
-    private final ConfiguracionDAO configuracionDAO = new ConfiguracionDAO(); // Nuevo DAO
+    private final ConfiguracionDAO configuracionDAO = new ConfiguracionDAO();
 
-    // Sub-controladores
     private DashboardController dashboardController;
     private TrabajadorController trabajadorController;
     private PlanificacionController planificacionController;
     private FaenaAsistenciaController asistenciaController;
     private LiquidacionCapturaController liquidacionController;
-    private ConfiguracionController configuracionController; // Nuevo Controlador
 
-    public MainController(MainView mainView) {
-        this.mainView = mainView;
+    public MainController(MainView view) {
+        this.mainView = view;
         initializeSubControllers();
         setupListeners();
         customizeAppearance();
     }
 
     private void initializeSubControllers() {
-        // Inyectamos las dependencias necesarias a cada controlador hijo
         this.dashboardController = new DashboardController(
-                mainView.getDashboardPanel(), trabajadorDAO, planificacionDAO, liquidacionDAO,
-                new DashboardDAO());
+                mainView.getDashboardPanel(), trabajadorDAO, planificacionDAO, liquidacionDAO, new DashboardDAO());
 
-        this.trabajadorController = new TrabajadorController(
-                mainView.getTrabajadorPanel(), trabajadorDAO);
-
-        this.planificacionController = new PlanificacionController(
-                mainView.getPlanificacionPanel(), planificacionDAO);
-
+        this.trabajadorController = new TrabajadorController(mainView.getTrabajadorPanel(), trabajadorDAO);
+        this.planificacionController = new PlanificacionController(mainView.getPlanificacionPanel(), planificacionDAO);
         this.asistenciaController = new FaenaAsistenciaController(
                 mainView.getAsistenciaPanel(), asistenciaDAO, planificacionDAO, trabajadorDAO);
-
         this.liquidacionController = new LiquidacionCapturaController(
                 mainView.getLiquidacionPanel(), liquidacionDAO, planificacionDAO);
 
-        // Inicialización del nuevo controlador de configuración
-        this.configuracionController = new ConfiguracionController(
+ 
+        ConfiguracionController config = new ConfiguracionController(
                 mainView.getConfiguracionPanel(), configuracionDAO);
     }
 
@@ -65,56 +58,52 @@ public class MainController {
     }
 
     private void setupListeners() {
-        // Navegación Sidebar con actualización de estado visual
         mainView.getBtnDashboard().addActionListener(e -> {
             mainView.setActiveButton(mainView.getBtnDashboard());
             showPanel("Dashboard");
         });
-
         mainView.getBtnTrabajadores().addActionListener(e -> {
             mainView.setActiveButton(mainView.getBtnTrabajadores());
             showPanel("Trabajadores");
         });
-
         mainView.getBtnPlanificacion().addActionListener(e -> {
             mainView.setActiveButton(mainView.getBtnPlanificacion());
             showPanel("Planificacion");
         });
-
         mainView.getBtnAsistencia().addActionListener(e -> {
             mainView.setActiveButton(mainView.getBtnAsistencia());
             showPanel("Asistencia");
         });
-
         mainView.getBtnLiquidacion().addActionListener(e -> {
             mainView.setActiveButton(mainView.getBtnLiquidacion());
             showPanel("Liquidacion");
         });
-
-        // Listener para el nuevo botón de configuración
         mainView.getBtnConfiguracion().addActionListener(e -> {
             mainView.setActiveButton(mainView.getBtnConfiguracion());
             showPanel("Configuracion");
         });
-
-        // Acción de salida segura
         mainView.getBtnLogout().addActionListener(e -> logout());
     }
 
-    private void showPanel(String panelName) {
-        // REFRESH DINÁMICO: Antes de mostrar, actualizamos los datos de la BD
-        switch (panelName) {
+    private void showPanel(String panel) {
+        switch (panel) {
             case "Dashboard" -> dashboardController.actualizarDatos();
             case "Planificacion" -> planificacionController.recargarTabla();
             case "Asistencia" -> asistenciaController.recargarVista();
             case "Liquidacion" -> liquidacionController.recargarVista();
             case "Trabajadores" -> trabajadorController.recargarTabla();
-            // La configuración no suele requerir refresh dinámico pero se puede añadir si
-            // es necesario
+            case "Configuracion" -> {
+ 
+                System.out.println("Cargando configuracion...");
+            }
+ 
+            default -> {
+
+                throw new IllegalArgumentException("Panel no soportado: " + panel);
+            }
         }
 
-        // Cambio visual de panel
-        mainView.getCardLayout().show(mainView.getContentPanel(), panelName);
+        mainView.getCardLayout().show(mainView.getContentPanel(), panel);
     }
 
     private void logout() {
@@ -124,12 +113,7 @@ public class MainController {
 
         if (confirm == JOptionPane.YES_OPTION) {
             mainView.dispose();
-
-            // Reiniciar flujo de acceso (Login)
-            LoginView loginView = new LoginView();
-            UsuarioDAO usuarioDAO = new UsuarioDAO();
-            LoginController loginController = new LoginController(loginView, usuarioDAO);
-            loginController.start();
+            new LoginController(new LoginView(), new UsuarioDAO()).start();
         }
     }
 

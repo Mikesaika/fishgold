@@ -94,7 +94,7 @@ public class PlanificacionController {
     }
 
     private void agregar() {
-        Planificacion p = extraerDatosDeVista();
+        Planificacion p = extraerDatosDeVista(false, null);
         List<Trabajador> seleccionados = tripulacionSeleccionadaActual();
 
         if (p == null) {
@@ -133,7 +133,13 @@ public class PlanificacionController {
             return;
         }
 
-        Planificacion p = extraerDatosDeVista();
+        java.util.Date origfecha = null;
+        Object fechaval = view.getTable().getValueAt(fila, 4);
+        if (fechaval instanceof Date) {
+            origfecha = new java.util.Date(((Date) fechaval).getTime());
+        }
+
+        Planificacion p = extraerDatosDeVista(true, origfecha);
         if (p == null) {
             return;
         }
@@ -215,8 +221,16 @@ public class PlanificacionController {
 
         view.getErrCodigo().setText(" ");
         view.getErrEmbarcacion().setText(" ");
+        view.getErrDestino().setText(" ");
         view.getErrMeta().setText(" ");
+        view.getErrFecha().setText(" ");
         view.getErrTripulacion().setText(" ");
+
+        Validator.applyStyle(view.getTxtCodigo(), true);
+        Validator.applyStyle(view.getTxtEmbarcacion(), true);
+        Validator.applyStyle(view.getTxtDestino(), true);
+        Validator.applyStyle(view.getTxtMetaPeso(), true);
+        Validator.applyStyle(view.getSpinFechaSalida(), true);
 
         recargarTripulacionChecks(null);
     }
@@ -241,14 +255,66 @@ public class PlanificacionController {
         }
     }
 
-    private Planificacion extraerDatosDeVista() {
+    private Planificacion extraerDatosDeVista(boolean isupdate, java.util.Date orig) {
         view.getErrCodigo().setText(" ");
         view.getErrEmbarcacion().setText(" ");
+        view.getErrDestino().setText(" ");
         view.getErrMeta().setText(" ");
+        view.getErrFecha().setText(" ");
 
         boolean v1 = Validator.isNotBlank(view.getTxtCodigo());
         boolean v2 = Validator.isNotBlank(view.getTxtEmbarcacion());
         boolean v3 = Validator.isDecimal(view.getTxtMetaPeso());
+        boolean v5 = Validator.isNotBlank(view.getTxtDestino());
+
+        java.util.Date date = null;
+        boolean v4 = true;
+        String errmsg = " ";
+
+        try {
+            view.getSpinFechaSalida().commitEdit();
+            date = (java.util.Date) view.getSpinFechaSalida().getValue();
+        } catch (java.text.ParseException e) {
+            v4 = false;
+            errmsg = "Fecha requerida";
+        }
+
+        if (v4) {
+            if (view.getSpinFechaSalida().getEditor() instanceof JSpinner.DateEditor) {
+                JSpinner.DateEditor editor = (JSpinner.DateEditor) view.getSpinFechaSalida().getEditor();
+                String text = editor.getTextField().getText();
+                if (text == null || text.trim().isEmpty()) {
+                    v4 = false;
+                    errmsg = "Fecha requerida";
+                }
+            }
+        }
+
+        if (v4 && date == null) {
+            v4 = false;
+            errmsg = "Fecha requerida";
+        }
+
+        if (v4) {
+            java.time.LocalDate sel = new Date(date.getTime()).toLocalDate();
+            java.time.LocalDate today = java.time.LocalDate.now();
+            if (isupdate && orig != null) {
+                java.time.LocalDate origld = new Date(orig.getTime()).toLocalDate();
+                if (!sel.equals(origld)) {
+                    if (sel.isBefore(today)) {
+                        v4 = false;
+                        errmsg = "La fecha debe ser actual o futura";
+                    }
+                }
+            } else {
+                if (sel.isBefore(today)) {
+                    v4 = false;
+                    errmsg = "La fecha debe ser actual o futura";
+                }
+            }
+        }
+
+        Validator.applyStyle(view.getSpinFechaSalida(), v4);
 
         if (!v1) {
             view.getErrCodigo().setText("Código requerido");
@@ -256,11 +322,17 @@ public class PlanificacionController {
         if (!v2) {
             view.getErrEmbarcacion().setText("Barco requerido");
         }
+        if (!v5) {
+            view.getErrDestino().setText("Destino requerido");
+        }
         if (!v3) {
             view.getErrMeta().setText("Meta numérica inválida");
         }
+        if (!v4) {
+            view.getErrFecha().setText(errmsg);
+        }
 
-        if (!(v1 && v2 && v3)) {
+        if (!(v1 && v2 && v3 && v4 && v5)) {
             return null;
         }
 
@@ -269,7 +341,8 @@ public class PlanificacionController {
             p.setCodigoViaje(view.getTxtCodigo().getText().trim());
             p.setEmbarcacionNombre(view.getTxtEmbarcacion().getText().trim());
             p.setDestinoRuta(view.getTxtDestino().getText().trim());
-            p.setFechaSalidaProgramada(new Date(((java.util.Date) view.getSpinFechaSalida().getValue()).getTime()));
+            p.setFechaSalidaProgramada(new Date(
+                    ((java.util.Date) view.getSpinFechaSalida().getValue()).getTime()));
             p.setMetaPesoKg(Double.parseDouble(view.getTxtMetaPeso().getText()));
             p.setEstado(view.getCbEstado().getSelectedItem().toString());
             return p;

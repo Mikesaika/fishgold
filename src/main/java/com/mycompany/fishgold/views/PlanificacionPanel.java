@@ -22,7 +22,7 @@ public class PlanificacionPanel extends JPanel {
     private JPanel tripulacionChecksPanel;
     private final Map<Integer, JCheckBox> checkPorTrabajadorId = new LinkedHashMap<>();
 
-    private JLabel errCodigo, errEmbarcacion, errMeta, errTripulacion, lblAyudaTripulacion;
+    private JLabel errCodigo, errEmbarcacion, errDestino, errFecha, errMeta, errTripulacion, lblAyudaTripulacion;
 
     private final Color COLOR_FONDO = new Color(248, 250, 252);
     private final Color COLOR_ACCENTO = new Color(37, 99, 235);
@@ -84,7 +84,7 @@ public class PlanificacionPanel extends JPanel {
         sidebar.setBackground(Color.WHITE);
         sidebar.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(226, 232, 240)),
-                new EmptyBorder(20, 25, 20, 25)));
+                new EmptyBorder(10, 20, 10, 20)));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -96,7 +96,7 @@ public class PlanificacionPanel extends JPanel {
         JLabel lblFormTitle = new JLabel("CONFIGURAR VIAJE");
         lblFormTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
         lblFormTitle.setForeground(COLOR_ACCENTO);
-        gbc.insets = new Insets(0, 0, 15, 0);
+        gbc.insets = new Insets(0, 0, 8, 0);
         gbc.gridy = y++;
         sidebar.add(lblFormTitle, gbc);
 
@@ -109,20 +109,29 @@ public class PlanificacionPanel extends JPanel {
         cbEstado.setBackground(Color.WHITE);
         spinFechaSalida = new JSpinner(new SpinnerDateModel());
         spinFechaSalida.setEditor(new JSpinner.DateEditor(spinFechaSalida, "yyyy-MM-dd"));
+        if (spinFechaSalida.getEditor() instanceof JSpinner.DateEditor) {
+            JFormattedTextField tf = ((JSpinner.DateEditor) spinFechaSalida.getEditor()).getTextField();
+            tf.setFocusLostBehavior(JFormattedTextField.PERSIST);
+        }
 
-        addLabeledField("CÓDIGO DE VIAJE", txtCodigo, sidebar, gbc, y++);
+        addLabeledField("CÓDIGO DE VIAJE", txtCodigo, sidebar, gbc, y);
+        y += 2;
         errCodigo = addErrorLabel(sidebar, gbc, y++);
 
-        addLabeledField("EMBARCACIÓN", txtEmbarcacion, sidebar, gbc, y++);
+        addLabeledField("EMBARCACIÓN", txtEmbarcacion, sidebar, gbc, y);
+        y += 2;
         errEmbarcacion = addErrorLabel(sidebar, gbc, y++);
 
-        addLabeledField("DESTINO", txtDestino, sidebar, gbc, y++);
-        y++;
+        addLabeledField("DESTINO", txtDestino, sidebar, gbc, y);
+        y += 2;
+        errDestino = addErrorLabel(sidebar, gbc, y++);
 
-        addLabeledField("FECHA SALIDA", spinFechaSalida, sidebar, gbc, y++);
-        y++;
+        addLabeledField("FECHA SALIDA", spinFechaSalida, sidebar, gbc, y);
+        y += 2;
+        errFecha = addErrorLabel(sidebar, gbc, y++);
 
-        addLabeledField("META DE PESCA (KG)", txtMetaPeso, sidebar, gbc, y++);
+        addLabeledField("META DE PESCA (KG)", txtMetaPeso, sidebar, gbc, y);
+        y += 2;
         errMeta = addErrorLabel(sidebar, gbc, y++);
 
         // TRIPULACIÓN (FORZAR TAMAÑO)
@@ -148,9 +157,9 @@ public class PlanificacionPanel extends JPanel {
 
         JScrollPane listScroll = new JScrollPane(tripulacionChecksPanel);
         listScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        Dimension listDim = new Dimension(0, 200);
+        Dimension listDim = new Dimension(0, 120);
         listScroll.setPreferredSize(listDim);
-        listScroll.setMinimumSize(new Dimension(100, 200));
+        listScroll.setMinimumSize(new Dimension(100, 120));
 
         gbc.gridy = y++;
         gbc.fill = GridBagConstraints.BOTH;
@@ -179,7 +188,7 @@ public class PlanificacionPanel extends JPanel {
         actions.add(btnClear);
 
         gbc.gridy = y++;
-        gbc.insets = new Insets(10, 0, 0, 0);
+        gbc.insets = new Insets(5, 0, 0, 0);
         sidebar.add(actions, gbc);
 
         // Glue final
@@ -195,7 +204,7 @@ public class PlanificacionPanel extends JPanel {
         label.setFont(new Font("Segoe UI", Font.BOLD, 11));
         label.setForeground(COLOR_SECUNDARIO);
         gbc.gridy = y;
-        gbc.insets = new Insets(5, 0, 3, 0);
+        gbc.insets = new Insets(3, 0, 1, 0);
         panel.add(label, gbc);
         field.setPreferredSize(new Dimension(0, 35));
         gbc.gridy = y + 1;
@@ -208,7 +217,7 @@ public class PlanificacionPanel extends JPanel {
         l.setFont(new Font("Segoe UI", Font.PLAIN, 10));
         l.setForeground(COLOR_PELIGRO);
         gbc.gridy = y;
-        gbc.insets = new Insets(0, 0, 5, 0);
+        gbc.insets = new Insets(0, 0, 2, 0);
         panel.add(l, gbc);
         return l;
     }
@@ -346,6 +355,14 @@ public class PlanificacionPanel extends JPanel {
 
     public JLabel getErrEmbarcacion() {
         return errEmbarcacion;
+    }
+
+    public JLabel getErrDestino() {
+        return errDestino;
+    }
+
+    public JLabel getErrFecha() {
+        return errFecha;
     }
 
     public JLabel getErrMeta() {
