@@ -65,6 +65,26 @@ public class Validator {
     }
 
     /**
+     * Valida que se haya seleccionado una opción válida en un JComboBox (no el
+     * índice 0).
+     */
+    public static boolean isComboBoxValid(javax.swing.JComboBox<?> comboBox) {
+        boolean isValid = comboBox.getSelectedIndex() > 0;
+        applyStyle(comboBox, isValid);
+        return isValid;
+    }
+
+    /**
+     * Valida si el texto contiene solo números y aplica estilo.
+     */
+    public static boolean isNumeric(JTextField field) {
+        String text = field.getText();
+        boolean isValid = text != null && SOLO_NUMEROS.matcher(text).matches() && !text.trim().isEmpty();
+        applyStyle(field, isValid);
+        return isValid;
+    }
+
+    /**
      * Método público para aplicar el diseño UI dependiendo del resultado.
      */
     public static void applyStyle(JComponent field, boolean isValid) {

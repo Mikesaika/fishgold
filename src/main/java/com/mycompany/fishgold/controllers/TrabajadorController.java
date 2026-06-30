@@ -53,6 +53,32 @@ public class TrabajadorController {
             }
         });
 
+        // VALIDACIÓN EN TIEMPO REAL PARA CÉDULA
+        view.getTxtCedula().getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                validate();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                validate();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                validate();
+            }
+
+            public void validate() {
+                if (!Validator.isNumeric(view.getTxtCedula())) {
+                    view.getErrCedula().setText("Cédula debe contener solo números.");
+                } else {
+                    view.getErrCedula().setText(" ");
+                }
+            }
+        });
+
         cargarTabla(dao.readAll());
     }
 
@@ -147,11 +173,15 @@ public class TrabajadorController {
         view.getTxtDireccion().setText("");
         view.getCbEstado().setSelectedIndex(0);
         view.getTable().clearSelection();
+        view.getTxtCedula().setEditable(true);
 
         // Limpiar mensajes de error
         view.getErrCedula().setText(" ");
         view.getErrNombre().setText(" ");
         view.getErrTelefono().setText(" ");
+        view.getErrCargo().setText(" ");
+        view.getErrDireccion().setText(" ");
+        view.getErrEstado().setText(" ");
 
         resetBorders();
     }
@@ -168,6 +198,7 @@ public class TrabajadorController {
             view.getTxtDireccion().setText(
                     view.getTable().getValueAt(fila, 5) != null ? view.getTable().getValueAt(fila, 5).toString() : "");
             view.getCbEstado().setSelectedItem(view.getTable().getValueAt(fila, 6).toString());
+            view.getTxtCedula().setEditable(false);
         }
     }
 
@@ -176,11 +207,14 @@ public class TrabajadorController {
         view.getErrCedula().setText(" ");
         view.getErrNombre().setText(" ");
         view.getErrTelefono().setText(" ");
+        view.getErrCargo().setText(" ");
+        view.getErrDireccion().setText(" ");
+        view.getErrEstado().setText(" ");
 
         // Validaciones con feedback en los nuevos labels de error
-        boolean v1 = Validator.isNotBlank(view.getTxtCedula());
+        boolean v1 = Validator.isNumeric(view.getTxtCedula());
         if (!v1)
-            view.getErrCedula().setText("Ingrese una cédula válida");
+            view.getErrCedula().setText("Cédula debe contener solo números y no estar vacía.");
 
         boolean v2 = Validator.isAlpha(view.getTxtNombre());
         if (!v2)
@@ -190,7 +224,20 @@ public class TrabajadorController {
         if (!v3)
             view.getErrTelefono().setText("Formato de teléfono incorrecto");
 
-        if (!(v1 && v2 && v3))
+        // Nuevas validaciones
+        boolean v4 = Validator.isComboBoxValid(view.getCbRol());
+        if (!v4)
+            view.getErrCargo().setText("⚠ Elija una opción correcta");
+
+        boolean v5 = Validator.isNotBlank(view.getTxtDireccion());
+        if (!v5)
+            view.getErrDireccion().setText("⚠ La dirección es obligatoria");
+
+        boolean v6 = Validator.isComboBoxValid(view.getCbEstado());
+        if (!v6)
+            view.getErrEstado().setText("⚠ Elija una opción correcta");
+
+        if (!(v1 && v2 && v3 && v4 && v5 && v6))
             return null;
 
         Trabajador t = new Trabajador();
@@ -208,5 +255,10 @@ public class TrabajadorController {
         view.getTxtCedula().setBorder(defaultBorder);
         view.getTxtNombre().setBorder(defaultBorder);
         view.getTxtTelefono().setBorder(defaultBorder);
+        view.getTxtDireccion().setBorder(defaultBorder);
+
+        Border defaultComboBorder = UIManager.getBorder("ComboBox.border");
+        view.getCbRol().setBorder(defaultComboBorder);
+        view.getCbEstado().setBorder(defaultComboBorder);
     }
 }

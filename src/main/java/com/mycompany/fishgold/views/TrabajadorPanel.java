@@ -13,7 +13,7 @@ public class TrabajadorPanel extends JPanel {
     private JButton btnAdd, btnUpdate, btnDelete, btnClear;
 
     // Etiquetas de Error para validación en tiempo real
-    private JLabel errCedula, errNombre, errTelefono;
+    private JLabel errCedula, errNombre, errTelefono, errCargo, errDireccion, errEstado;
 
     // Paleta de Colores Slate & Blue (Profesional)
     private final Color COLOR_FONDO = new Color(248, 250, 252);
@@ -103,9 +103,9 @@ public class TrabajadorPanel extends JPanel {
         txtNombre = new JTextField();
         txtTelefono = new JTextField();
         txtDireccion = new JTextField();
-        cbRol = new JComboBox<>(new String[] { "Capitán", "Motorista", "Pescador", "Cocinero", "Ayudante" });
+        cbRol = new JComboBox<>(new String[] { "seleccione...","Capitán", "Motorista", "Pescador", "Cocinero", "Ayudante" });
         cbRol.setBackground(Color.WHITE);
-        cbEstado = new JComboBox<>(new String[] { "Activo", "Inactivo" });
+        cbEstado = new JComboBox<>(new String[] { "seleccione...","Activo", "Inactivo" });
         cbEstado.setBackground(Color.WHITE);
 
         // Añadir campos con labels y errores
@@ -118,18 +118,20 @@ public class TrabajadorPanel extends JPanel {
         addErrorLabel(errNombre, sidebar, gbc, 6);
 
         addLabeledField("CARGO OPERATIVO", cbRol, sidebar, gbc, 7);
-        gbc.gridy = 9;
-        sidebar.add(Box.createVerticalStrut(15), gbc); // Espaciador
+        errCargo = createErrorLabel();
+        addErrorLabel(errCargo, sidebar, gbc, 9);
 
         addLabeledField("TELÉFONO DE CONTACTO", txtTelefono, sidebar, gbc, 10);
         errTelefono = createErrorLabel();
         addErrorLabel(errTelefono, sidebar, gbc, 12);
 
         addLabeledField("DIRECCIÓN DE DOMICILIO", txtDireccion, sidebar, gbc, 13);
-        gbc.gridy = 15;
-        sidebar.add(Box.createVerticalStrut(15), gbc);
+        errDireccion = createErrorLabel();
+        addErrorLabel(errDireccion, sidebar, gbc, 15);
 
         addLabeledField("ESTADO EN SISTEMA", cbEstado, sidebar, gbc, 16);
+        errEstado = createErrorLabel();
+        addErrorLabel(errEstado, sidebar, gbc, 18);
 
         // Botonera
         JPanel actions = new JPanel(new GridLayout(2, 2, 12, 12));
@@ -144,11 +146,11 @@ public class TrabajadorPanel extends JPanel {
         actions.add(btnDelete);
         actions.add(btnClear);
 
-        gbc.gridy = 18;
+        gbc.gridy = 19;
         gbc.insets = new Insets(20, 0, 0, 0);
         sidebar.add(actions, gbc);
 
-        gbc.gridy = 19;
+        gbc.gridy = 20;
         gbc.weighty = 1.0;
         sidebar.add(Box.createVerticalGlue(), gbc);
 
@@ -269,5 +271,17 @@ public class TrabajadorPanel extends JPanel {
 
     public JLabel getErrTelefono() {
         return errTelefono;
+    }
+
+    public JLabel getErrCargo() {
+        return errCargo;
+    }
+
+    public JLabel getErrDireccion() {
+        return errDireccion;
+    }
+
+    public JLabel getErrEstado() {
+        return errEstado;
     }
 }
